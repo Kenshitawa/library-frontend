@@ -379,4 +379,183 @@ export const SettingsPage: React.FC = () => {
                     </Button>
                   </div>
                 ))}
-        #^4ЦKh▒ИЛ╤╩╖q╚^v┬⌡щ\н┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиь⌡э°⌡щы\°ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиь⌡э°⌡щы\°ивVир[°ы\²	вO┌┬B┬\ы\°вэ⌡ы [N┬б┬⌡щн┬б┬Y┬щ [≥б┬≤[YN┬щ [≥б┬[XZ[┬щ [≥б┬⌡шN┬	шX°≤\ X[┴х	щXXз\┴б┬Xщ]≥N┬⌡шшX[┌┬⌡э°⌡щы\≈зY┬щ [≥х²[┬[YN┬щ [≥б┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVищ\ы\°вэ⌡ы [IвVит⌡щивK	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVищ\ы\°вэ⌡ы [IвVир[°ы\²	вO┌┬B┬]]э°н┬б┬⌡щн┬б┬Y┬щ [≥б┬≤[YN┬щ [≥б┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиь]]э°ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиь]]э°ивVир[°ы\²	вO┌┬B┬]\н┬б┬⌡щн┬б┬Y┬щ [≥б┬]N┬щ [≥б┬щX²]N┬щ [≥х²[┬\ь⌡▄L┬щ [≥х²[┬\ь⌡▄Lн┬щ [≥х²[┬X⌡\з\▌┬щ [≥х²[┬YX\▌┬²[X≥\┬²[┬Y][ш▌┬щ [≥х²[┬[≥щXYыN┬щ [≥б┬щX ≥XщзY┬щ [≥х²[┬э≤YWш]≥[┬щ [≥х²[┬\N┬	щ^⌡шзих	шX°≤\·Iх	э≥Y≥\≥[≤ыIб┬\ьэ \[ш▌┬щ [≥х²[┬шщ≥\≈щ\⌡┬щ [≥х²[┬Yэн┬щ [≥жвH²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]\ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]\ивVир[°ы\²	вO┌┬B┬]Wь]]э°н┬б┬⌡щн┬б┬]WзY┬щ [≥б┬]]э≈зY┬щ [≥б┬B┬[°ы\²┬]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]Wь]]э°ивVит⌡щивB┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]Wь]]э°ивVир[°ы\²	вO┌┬B┬шэY\н┬б┬⌡щн┬б┬Y┬щ [≥б┬]WзY┬щ [≥б┬≤\≤шыN┬щ [≥б┬ьь][ш≈зY┬щ [≥х²[┬ь[ш²[X≥\▌┬щ [≥х²[┬щ]\н┬	ь]≤Z[X⌡Iх	з\эщYY	х	э≥\ы\²≥Y	х	з[≈э⌡ьы\эз[≥их	шэщ	х	ы[XYыY	х	щз]≤]ш┴б┬шш≥][ш▌┬	ышшы	х	ы≤Z\┴х	эшэ┴х	ы[XYыY	б┬Xэ]Z\≥Yшш▌┬щ [≥х²[┬ XыN┬²[X≥\┬²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиьшэY\ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиьшэY\ивVир[°ы\²	вO┌┬B┬\эщY\н┬б┬⌡щн┬б┬Y┬щ [≥б┬шэWзY┬щ [≥б┬⌡э°⌡щы\≈зY┬щ [≥б┬\эщYYь]┬щ [≥б┬YWь]┬щ [≥б┬≥]\⌡≥Yь]┬щ [≥х²[┬≥[≥]ь[ьшщ[²┬²[X≥\┌┬шш≥][ш≈ь]з\эщYN┬	ышшы	х	ы≤Z\┴х	эшэ┴х	ы[XYыY	б┬шш≥][ш≈ь]э≥]\⌡▌┬	ышшы	х	ы≤Z\┴х	эшэ┴х	ы[XYыY	х²[┬\эщYYь·N┬щ [≥х²[┬≥]\⌡≥Yщн┬щ [≥х²[┬щ]\н┬	шэ[┴х	э≥]\⌡≥Y	х	шэщ	б┬≥]\⌡≈ш⌡щN┬щ [≥х²[┬≥]\⌡≈эщвщ\⌡┬щ [≥х²[┬щ≥\° YWэ≥X\шш▌┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиз\эщY\ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиз\эщY\ивVир[°ы\²	вO┌┬B┬≥\ы\²≤][ш°н┬б┬⌡щн┬б┬Y┬щ [≥б┬]WзY┬щ [≥б┬⌡э°⌡щы\≈зY┬щ [≥б┬XыYь]┬щ [≥б┬щ]\н┬	щьZ][≥их	э≥XYIх	ы²[ [Y	х	ьь[≤ы[Y	х	ы^\≥Y	б┬≥XYWьшэWзY┬щ [≥х²[┬Xзщ\ыXY[≥N┬щ [≥х²[┬]Y]YWээз][ш▌┬²[X≥\┬²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ≥\ы\²≤][ш°ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ≥\ы\²≤][ш°ивVир[°ы\²	вO┌┬B┬з\≥ы\н┬б┬⌡щн┬б┬Y┬щ [≥б┬⌡э°⌡щы\≈зY┬щ [≥б┬\эщYWзY┬щ [≥х²[┬\N┬	шэщ	х	ы[XYыY	х	шщ≥\≥YIх	шX[²X[	б┬[[щ[²┬²[X≥\┌┬ZYь[[щ[²┬²[X≥\┌┬щ]\н┬	шэ[┴х	э\²X[	х	эZY	х	щьZ]≥Y	б┬≥X\шш▌┬щ [≥х²[┬ьZ]≥Yь·N┬щ [≥х²[┬ьZ]≥Wэ≥X\шш▌┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬[]Yь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиьз\≥ы\ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиьз\≥ы\ивVир[°ы\²	вO┌┬B┬^[Y[²н┬б┬⌡щн┬б┬Y┬щ [≥б┬з\≥ыWзY┬щ [≥б┬⌡э°⌡щы\≈зY┬щ [≥б┬[[щ[²┬²[X≥\┌┬≥XыZ]≥Yь·N┬щ [≥х²[┬≥XыZ]≥Yь]┬щ [≥б┬≥XыZ\ш⌡н┬щ [≥х²[┬≥XыZ\щ\⌡┬щ [≥х²[┬⌡щ\н┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ^[Y[²ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ^[Y[²ивVир[°ы\²	вO┌┬B┬⌡щY Xь][ш°н┬б┬⌡щн┬б┬Y┬щ [≥б┬⌡э°⌡щы\≈зY┬щ [≥х²[┬\N┬щ [≥б┬з[⌡≥[┬щ [≥б┬≥Xз\Y[²┬щ [≥х²[┬щX ≥Xщ┬щ [≥х²[┬⌡ыN┬щ [≥х²[┬ы[²ь]┬щ [≥х²[┬щ]\н┬	э[≥[≥их	эы[²	х	ы≤Z[Y	х	ш⌡щэы[²	б┬\°⌡э▌┬щ [≥х²[┬≥XYь]┬щ [≥х²[┬≥\э²зY┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬\]Yь]┬щ [≥б┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиш⌡щY Xь][ш°ивVит⌡щивK	зY	х	ьэ≥X]Yь]	х	щ\]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиш⌡щY Xь][ш°ивVир[°ы\²	вO┌┬B┬[²≥[²э·Wэ≥\э²н┬б┬⌡щн┬б┬Y┬щ [≥б┬ы[≥\≤]Yь]┬щ [≥б┬⌡щвьшщ[²┬²[X≥\┌┬ш≤\зщ┬°шш┌┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиз[²≥[²э·Wэ≥\э²ивVит⌡щивK	зY	х	ыы[≥\≤]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиз[²≥[²э·Wэ≥\э²ивVир[°ы\²	вO┌┬B┬ь[[≥\≈ы≥YYн┬б┬⌡щн┬б┬Y┬щ [≥б┬\ы\≈зY┬щ [≥б┬зы[≈з\з┬щ [≥б┬э≥X]Yь]┬щ [≥б┬≥]⌡зыYь]┬щ [≥х²[┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиьь[[≥\≈ы≥YYивVит⌡щивK	зY	х	ьэ≥X]Yь]	о┌┬\]N┬\²X[]X≤\ыVиэX⌡XивVиуX⌡\ивVиьь[[≥\≈ы≥YYивVир[°ы\²	вO┌┬B┬]Y]шын┬б┬⌡щн┬б┬Y┬щ [≥б┬\ы\≈зY┬щ [≥х²[┬Xщ[ш▌┬щ [≥б┬[²]N┬щ [≥б┬[²]WзY┬щ [≥х²[┬≥Y⌡э≥N┬°шш┬²[┬Y²\▌┬°шш┬²[┬\ьY▌┬щ [≥х²[┬э≥X]Yь]┬щ [≥б┬B┬[°ы\²┬шZ]]X≤\ыVиэX⌡XивVиуX⌡\ивVиь]Y]шыивVит⌡щивK	зY	х	ьэ≥X]Yь]	о┌┬\]N┬≥]≥\┌┬B┬B┬ Y]эн┬≥Xшэ≥щ [≥к≥]≥\▐┌┬²[≤щ[ш°н┬б┬ы]щ\ы\≈э⌡шN┬б┬\≥эн┬≥Xшэ≥щ [≥к≥]≥\▐┌┬≥]\⌡°н┬щ [≥б┬B┬ы]ь⌡э°⌡щы\≈шэ[≈з\эщY\н┬б┬\≥эн┬хь⌡э°⌡щы\≈зY┬щ [≥хB┬≥]\⌡°н┬²[X≥\┌┬B┬ы]ь⌡э°⌡щы\≈шщ]щ[≥[≥вьз\≥ы\н┬б┬\≥эн┬хь⌡э°⌡щы\≈зY┬щ [≥хB┬≥]\⌡°н┬²[X≥\┌┬B┬зXзвз\эщYWь⌡ьзэн┬б┬\≥эн┬хьшэWзY┬щ [≥нхь⌡э°⌡щы\≈зY┬щ [≥хB┬≥]\⌡°н┬х⌡ьзыY┬⌡шшX[▌х≥X\шш▌┬щ [≥хVвB┬B┬X\ вш⌡щY Xь][ш≈э≥XY┬б┬\≥эн┬хш⌡щY Xь][ш≈зY┬щ [≥хB┬≥]\⌡°н┬[≥Y [≥Y┬B┬B┬[²[\н┬≥Xшэ≥щ [≥к≥]≥\▐┌┬B÷B┌▀кхшш²≥[ Y[≤ыH⌡щх\\б≥^э²\HX°≤\·T⌡ы [HH]X≤\ыVиэX⌡XивVиуX⌡\ивVишX°≤\·Wэ⌡ы [IвVит⌡щивB≥^э²\HщX ≥XщH]X≤\ыVиэX⌡XивVиуX⌡\ивVиэщX ≥XщивVит⌡щивB≥^э²\Hьь][ш┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVишьь][ш°ивVит⌡щивB≥^э²\H⌡э°⌡щы\∙\HH]X≤\ыVиэX⌡XивVиуX⌡\ивVиь⌡э°⌡щы\≈щ\\ивVит⌡щивB≥^э²\Hш\эхH]X≤\ыVиэX⌡XивVиуX⌡\ивVиьш\эы\ивVит⌡щивB≥^э²\H⌡э°⌡щы\┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVиь⌡э°⌡щы\°ивVит⌡щивB≥^э²\H\ы\■⌡ы [HH]X≤\ыVиэX⌡XивVиуX⌡\ивVищ\ы\°вэ⌡ы [IвVит⌡щивB≥^э²\H]]э┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVиь]]э°ивVит⌡щивB≥^э²\H]HH]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]\ивVит⌡щивB≥^э²\H]P]]э┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVищ]Wь]]э°ивVит⌡щивB≥^э²\HшэHH]X≤\ыVиэX⌡XивVиуX⌡\ивVиьшэY\ивVит⌡щивB≥^э²\H\эщYHH]X≤\ыVиэX⌡XивVиуX⌡\ивVиз\эщY\ивVит⌡щивB≥^э²\H≥\ы\²≤][ш┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ≥\ы\²≤][ш°ивVит⌡щивB≥^э²\Hз\≥ыHH]X≤\ыVиэX⌡XивVиуX⌡\ивVиьз\≥ы\ивVит⌡щивB≥^э²\H^[Y[²H]X≤\ыVиэX⌡XивVиуX⌡\ивVиэ^[Y[²ивVит⌡щивB≥^э²\H⌡щY Xь][ш┬H]X≤\ыVиэX⌡XивVиуX⌡\ивVиш⌡щY Xь][ш°ивVит⌡щивB≥^э²\Hь[[≥\▒≥YYH]X≤\ыVиэX⌡XивVиуX⌡\ивVиьь[[≥\≈ы≥YYивVит⌡щивB≥^э²\H]Y]ыхH]X≤\ыVиэX⌡XивVиуX⌡\ивVиь]Y]шыивVит⌡щивB
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 5: Classes */}
+        <TabsContent value="classes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Classes & Year Groups</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleAddClass} className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-xl">
+                <Input
+                  placeholder="Class name (e.g. Grade 9 Blue)"
+                  value={newClassName}
+                  onChange={(e) => setNewClassName(e.target.value)}
+                />
+                <Input
+                  placeholder="Grade level (e.g. Grade 9)"
+                  value={newClassGrade}
+                  onChange={(e) => setNewClassGrade(e.target.value)}
+                />
+                <Button type="submit" variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
+                  Add Class
+                </Button>
+              </form>
+
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {(classes || []).map((c) => (
+                  <div key={c.id} className="flex items-center justify-between py-2.5 text-xs">
+                    <div>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{c.name}</span>
+                      {c.grade_level && (
+                        <span className="text-slate-400 ml-2">({c.grade_level})</span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-slate-400 hover:text-danger"
+                      onClick={() => handleDeleteClass(c.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 6: Charge Rules */}
+        <TabsContent value="charges">
+          <Card>
+            <CardHeader>
+              <CardTitle>Charge & Replacement Policies</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 max-w-xl text-xs">
+              <div className="space-y-3">
+                <Input
+                  label="Damage Reporting Window (Days)"
+                  type="number"
+                  value={profileForm.damage_window_days}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, damage_window_days: Number(e.target.value) })
+                  }
+                  description="Damage reported within this many days of issue is exempt from return penalty charges."
+                />
+
+                <Input
+                  label="Lost Book Threshold (Weeks Overdue)"
+                  type="number"
+                  value={profileForm.lost_threshold_weeks}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, lost_threshold_weeks: Number(e.target.value) })
+                  }
+                  description="Books overdue past this threshold can be converted to Lost status with a replacement charge."
+                />
+
+                <div className="pt-2">
+                  <Button
+                    variant="primary"
+                    loading={isUpdating}
+                    onClick={handleProfileSubmit}
+                  >
+                    Save Charge Rules
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="automation">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5 text-primary" />
+                  <CardTitle>Appearance</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  {themePreference === 'system'
+                    ? 'The library follows your deviceБ─≥s light or dark setting.'
+                    : `The library is using ${themePreference} mode.`}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => void setSystemTheme()}
+                  disabled={themePreference === 'system'}
+                >
+                  Use device appearance
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BellRing className="h-5 w-5 text-primary" />
+                  <CardTitle>Notification sound</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={notificationSoundEnabled}
+                    onChange={(event) => void handleNotificationSoundChange(event.target.checked)}
+                    className="mt-1 h-4 w-4 accent-primary"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Play a short tone for new notifications
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                      This preference is saved on this browser. Enable it on each librarian workstation that should play a tone.
+                    </span>
+                  </span>
+                </label>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CalendarClock className="h-5 w-5 text-[#8a5a00] dark:text-[#f3d37e]" />
+                  <CardTitle>Scheduled library notices</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="rounded-lg bg-[#f3f4e4] p-3 dark:bg-[#354126]">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">Inventory snapshot every 30 days</p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    A complete, saved copy-by-copy snapshot is created automatically and appears in Notifications.
+                  </p>
+                </div>
+                <div className="rounded-lg bg-[#f4e2d9] p-3 dark:bg-[#4c3027]">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">Uncollected reservations after 3 days</p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    The reservation expires and a printable warning letter is added to Notifications.
+                  </p>
+                </div>
+                <Link to="/reports?report=inventory">
+                  <Button variant="outline" leftIcon={<Download className="h-4 w-4" />}>
+                    Open inventory report
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
