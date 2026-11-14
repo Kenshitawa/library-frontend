@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })))
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
 const CatalogPage = lazy(() => import('@/pages/CatalogPage').then((module) => ({ default: module.CatalogPage })))
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: withSuspense(<ForgotPasswordPage />),
+  },
+  {
+    path: '/reset-password',
+    element: withSuspense(<ResetPasswordPage />),
   },
   {
     path: '/',
@@ -178,3 +183,4 @@ export const router = createBrowserRouter([
     element: withSuspense(<NotFoundPage />),
   },
 ])
+
