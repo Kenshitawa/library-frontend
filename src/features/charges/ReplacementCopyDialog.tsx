@@ -66,32 +66,72 @@ export const ReplacementCopyDialog: React.FC<ReplacementCopyDialogProps> = ({
     <Dialog open={open} onClose={onClose}>
       <DialogHeader>
         <div className="flex items-center gap-2">
-          <BookPlus className="h-5 w-5 text-primary" /×Ozï{h‘éì¶»§q«^tÛ\ÜÓ˜[YOHšLŽËY[ˆÏƒBˆÙ]ƒBˆ
-Hˆš[\™YÛ\ÜÙ\Ë›[™ÝOOHÈ
-BˆØ\™ƒBˆØ\™ÛÛ[Û\ÜÓ˜[YOHœLLˆ^XÙ[\ˆ^\Û]KMLƒBˆ›ÈÜ[ˆØ[œÈ›Ý[™X]Ú[™È[Ý\ˆÜš]\šXKƒBˆÐØ\™ÛÛ[ƒBˆÐØ\™ƒBˆ
-Hˆ
-Bˆ]ˆÛ\ÜÓ˜[YOHœÜXÙK^KMˆƒBˆÙš[\™YÛ\ÜÙ\Ë›X\
+          <BookPlus className="h-5 w-5 text-primary" />
+          <DialogTitle>Accept Replacement Copy</DialogTitle>
+        </div>
+        <DialogDescription>
+          Learner or parent has provided a replacement book for the lost item. This registers the new copy into inventory and discharges the fine.
+        </DialogDescription>
+      </DialogHeader>
 
-ÙÊHOˆ
-BˆØ\™Ù^O^ØÙË˜Û\ÜÒYHÛ\ÜÓ˜[YOHœš[X›ØÚÈÝ™\™›ÝËZY[ˆƒBˆØ\™XY\ˆÛ\ÜÓ˜[YOH˜™Ë\Û]KML\šÎ˜™Ë\Û]KNLÍL›Ü™\‹Xˆ›Ü™\‹\Û]KLŒ\šÎ˜›Ü™\‹\Û]KNKLÈMƒBˆ]ˆÛ\ÜÓ˜[YOH™›^][\ËXÙ[\ˆ\ÝYžKX™]ÙY[ˆƒBˆ]ˆÛ\ÜÓ˜[YOH™›^][\ËXÙ[\ˆØ\LˆƒBˆ\Ù\œÈÛ\ÜÓ˜[YOHšMHËMH^\š[X\žHˆÏƒBˆØ\™]HÛ\ÜÓ˜[YOH^X˜\ÙH›ÛX›ÛƒBˆÛ\ÜÎˆØÙË˜Û\ÜÓ˜[Y_HØÙË™Ü˜YHÈ
-Ü˜YH	ØÙË™Ü˜Y_JXˆ	ÉßCBˆÐØ\™]OƒBˆÙ]ƒBˆ˜YÙH˜\šX[H›Ý][™HƒBˆØÙË˜›Üœ›ÝÙ\œË›[™ÝHX\›™\œÈÉÈ	ßCBˆØÙË˜›Üœ›ÝÙ\œËœ™YXÙJ
-XØËŠHOˆXØÈ
-È‹š][\ÐÛÝ[
-_H›ÛÚÜÃBˆÐ˜YÙOƒBˆÙ]ƒBˆÐØ\™XY\ƒBƒBˆØ\™ÛÛ[Û\ÜÓ˜[YOHœLƒBˆX›HÛ\ÜÓ˜[YOHËY[^[Y^^È›Ü™\‹XÛÛ\ÙHƒBˆXYƒBˆˆÛ\ÜÓ˜[YOH˜›Ü™\‹Xˆ›Ü™\‹\Û]KLŒ™Ë\Û]KMLÍL\šÎ˜›Ü™\‹\Û]KNƒBˆÛ\ÜÓ˜[YOHœLÈ›Û\Ù[ZX›Û^\Û]KMŒ\šÎ^\Û]KMƒBˆX\›™\ˆ˜[YCBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Û\Ù[ZX›Û^\Û]KMŒ\šÎ^\Û]KMƒBˆYHÃBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Û\Ù[ZX›Û^\Û]KMŒ\šÎ^\Û]KMƒBˆ][\ÈÝ]Ý[™[™ÃBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Û\Ù[ZX›Û^\Û]KMŒ\šÎ^\Û]KM^XÙ[\ˆ›Ë\š[ƒBˆÝ™\™YCBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Û\Ù[ZX›Û^\Û]KMŒ\šÎ^\Û]KMƒBˆÚXÚË[Ù™ˆÈÚYÛ˜]\™CBˆÝƒBˆÝƒBˆÝXYƒBˆ›ÙHÛ\ÜÓ˜[YOH™]šYK^H]šYK\Û]KLŒ\šÎ™]šYK\Û]KNƒBˆØÙË˜›Üœ›ÝÙ\œË›X\
+      <DialogContent className="space-y-4">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3 text-xs space-y-1">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Book Title:</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
+              {charge.issue?.copy?.title?.title || 'Unknown Title'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Borrower:</span>
+            <span>{charge.borrower?.name}</span>
+          </div>
+        </div>
 
-ŠHOˆ
-BˆˆÙ^O^Ø‹˜›Üœ›ÝÙ\’YHÛ\ÜÓ˜[YOH˜[YÛ‹]ÜÝ™\Ž˜™Ë\Û]KML\šÎšÝ™\Ž˜™Ë\Û]KNÌÌƒBˆÛ\ÜÓ˜[YOHœLÈ›Û[YY][H^\Û]KNL\šÎ^\Û]KLLƒBˆØ‹˜›Üœ›ÝÙ\“˜[Y_CBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Û[[Û›È^\Û]KMLƒBˆØ‹˜YZ\ÜÚ[Û“[X™\ˆ	ø %	ßCBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈƒBˆ]ˆÛ\ÜÓ˜[YOHœÜXÙK^KLHƒBˆØ‹š\ÜÝY\Ë›X\
+        <div>
+          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+            New Copy Barcode
+          </label>
+          <div className="relative">
+            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              placeholder="Scan or enter new barcode..."
+              className="pl-9 font-mono"
+            />
+          </div>
+        </div>
 
-\ÜÊHOˆ
-Bˆ]ƒBˆÙ^O^Ú\ÜËš\ÜÝYRYCBˆÛ\ÜÓ˜[YOH™›^][\ËXÙ[\ˆØ\Lˆ^VÌL\HƒBˆƒBˆÜ[ˆÛ\ÜÓ˜[YOH™›Û\Ù[ZX›Û^\Û]KN\šÎ^\Û]KLŒƒBˆÚ\ÜË]_CBˆÜÜ[ƒBˆÜ[ˆÛ\ÜÓ˜[YOH™›Û[[Û›È^\Û]KM–ÞÚ\ÜË˜˜\˜ÛÙ_WOÜÜ[ƒBˆÚ\ÜËš\ÓÝ™\™YH	‰ˆ
-BˆÜ[ˆÛ\ÜÓ˜[YOH^Y[™Ù\ˆ›Û[YY][HŠÝ™\™YJOÜÜ[ƒBˆ
-_CBˆÙ]ƒBˆ
-J_CBˆÙ]ƒBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ^XÙ[\ˆ›Ë\š[ƒBˆØ‹›Ý™\™YPÛÝ[ˆÈ
-Bˆ˜YÙH˜\šX[H™[™Ù\ˆžØ‹›Ý™\™YPÛÝ[HÝ™\™YOÐ˜YÙOƒBˆ
-Hˆ
-Bˆ˜YÙH˜\šX[HœÝXØÙ\ÜÈ“Ûˆ˜XÚÏÐ˜YÙOƒBˆ
-_CBˆÝƒBˆÛ\ÜÓ˜[YOHœLÈ›Ü™\‹[›Ü™\‹\Û]KLL\šÎ˜›Ü™\‹\Û]KNËMƒBˆ]ˆÛ\ÜÓ˜[YOHšMˆ›Ü™\‹Xˆ›Ü™\‹Y\ÚY›Ü™\‹\Û]KLÌ\šÎ˜›Ü™\‹\Û]KMÌÙ]ƒBˆÝƒBˆÝƒBˆ
-J_CBˆÝ›ÙOƒBˆÝX›OƒBˆÐØ\™ÛÛ[ƒBˆÐØ\™ƒBˆ
-J_CBˆÙ]ƒBˆ
-_CBˆÙ]ƒBˆ
-CBŸCB
+        <div>
+          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+            Book Condition
+          </label>
+          <Select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value as CopyCondition)}
+            options={[
+              { value: 'good', label: 'Good (Brand New / Clean)' },
+              { value: 'fair', label: 'Fair (Minor wear, intact)' },
+            ]}
+          />
+        </div>
+      </DialogContent>
+
+      <DialogFooter>
+        <Button variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleAccept}
+          loading={acceptReplacementMutation.isPending}
+          disabled={!barcode.trim()}
+        >
+          <CheckCircle2 className="mr-2 h-4 w-4" /> Add Copy & Settle Charge
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )
+}
+
