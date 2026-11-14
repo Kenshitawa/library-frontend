@@ -111,7 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const role: UserRole | null =
-    profile?.active === true ? (profile.role as UserRole) || null : null
+    profile?.active === true && profile.must_change_password !== true
+      ? (profile.role as UserRole) || null
+      : null
 
   return (
     <AuthContext.Provider
@@ -134,3 +136,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export function useAuth() {
   return useContext(AuthContext)
 }
+
