@@ -35,6 +35,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ accountInactive: true }} replace />
   }
 
+  if (profile.must_change_password) {
+    return <Navigate to="/reset-password" replace />
+  }
+
   if (requiredRole && role !== requiredRole) {
     // If user doesn't have the role, redirect to dashboard or safe page
     return <Navigate to="/dashboard" replace />
@@ -42,3 +46,4 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   return <>{children}</>
 }
+
