@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #0f766e;
+  --color-primary-light: #14b8a6;
+  --radius-card: 12px;
+  --app-bg: #eff1e5;
+  --surface: #fbfbf4;
+  --surface-raised: #ffffff;
+  --surface-inset: #e2ead9;
+  --surface-border: #cdd8c3;
+  --text-primary: #17231d;
+  --text-secondary: #526354;
+  --text-muted: #68796b;
+}
+
+html.dark {
+  color-scheme: dark;
+  --app-bg: #0f1814;
+  --surface: #1a2922;
+  --surface-raised: #22342b;
+  --surface-inset: #14221b;
+  --surface-border: #3a5145;
+  --text-primary: #f0f5ef;
+  --text-secondary: #c5d2c7;
+  --text-muted: #a4b4a7;
+}
+
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; font-size: 15px; }
+  body { background-color: var(--app-bg); color: var(--text-primary); }
+  * { border-color: var(--surface-border); }
+}
+
+html.dark .text-primary {
+  color: #84d1a7;
+}
+
+html.dark .bg-primary {
+  background-color: #287452;
+}
+
+html.dark {
+  scrollbar-color: #40594a #15221b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
