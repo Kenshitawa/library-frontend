@@ -116,12 +116,13 @@ export interface Database {
           email: string
           role: 'librarian' | 'teacher'
           active: boolean
+          must_change_password: boolean
           borrower_id: string | null
           theme: string
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['users_profile']['Row'], 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['users_profile']['Row'], 'created_at' | 'updated_at' | 'must_change_password'> & { must_change_password?: boolean }
         Update: Partial<Database['public']['Tables']['users_profile']['Insert']>
       }
       authors: {
