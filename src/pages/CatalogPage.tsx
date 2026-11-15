@@ -207,72 +207,35 @@ export const CatalogPage: React.FC = () => {
   const columns: Column<Title>[] = [
     {
       key: 'title',
-      header: 'Title, cover & author',
+      header: 'Books',
       sortable: true,
       accessor: (row) => (
-        <div className="flex min-w-[16rem] items-center gap-3">
-          <div className="flex h-14 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-slate-100 text-slate-400 shadow-sm dark:bg-slate-800">
-            {row.cover_url ? <img src={row.cover_url} alt={`Cover preview for ${row.title}`} className="h-full w-full object-cover" /> : <BookOpen className="h-4 w-4" />}
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative flex h-14 w-10 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-100 text-slate-400 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <BookOpen className="absolute h-4 w-4" aria-hidden="true" />
+            {row.cover_url ? (
+              <img
+                src={row.cover_url}
+                alt={`${row.title} book cover`}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : <BookOpen className="h-4 w-4" aria-hidden="true" />}
           </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-100">{row.title}</span>
-            <span className="text-xs text-slate-500">by {row.author || 'Unknown'}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-100">{row.title}</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500">{row.publisher || 'Publisher unavailable'} · {row.subject?.name || 'Subject unavailable'} · Grade {row.grade_level || '—'}</p>
           </div>
+          <span className={`shrink-0 text-xs font-semibold ${
+            (row.available_copies_count ?? 0) > 0 ? 'text-success-700 dark:text-success' : 'text-danger'
+          }`}>
+            {row.available_copies_count ?? 0}/{row.total_copies_count ?? 0} available
+          </span>
         </div>
       ),
-    },
-    {
-      key: 'isbn',
-      header: 'ISBN',
-      accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
-          {row.isbn13 || row.isbn10 || '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'type',
-      header: 'Type',
-      sortable: true,
-      accessor: (row) => {
-        const variantMap: Record<BookType, 'info' | 'success' | 'warning'> = {
-          textbook: 'info',
-          library: 'success',
-          reference: 'warning',
-        }
-        return (
-          <Badge variant={variantMap[row.type as BookType] || 'gray'} size="sm">
-            {row.type}
-          </Badge>
-        )
-      },
-    },
-    {
-      key: 'subject',
-      header: 'Subject',
-      accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400">
-          {row.subject?.name || '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'copies',
-      header: 'Availability',
-      align: 'center',
-      accessor: (row) => {
-        const avail = row.available_copies_count ?? 0
-        const total = row.total_copies_count ?? 0
-        return (
-          <span
-            className={`text-xs font-semibold ${
-              avail > 0 ? 'text-success-700 dark:text-success' : 'text-danger'
-            }`}
-          >
-            {avail} / {total} available
-          </span>
-        )
-      },
     },
   ]
 
@@ -363,6 +326,7 @@ export const CatalogPage: React.FC = () => {
       <DataTable
         data={titles || []}
         columns={columns}
+        compact
         loading={isLoading}
         onRowClick={(row) => navigate(`/catalog/${row.id}`)}
         emptyTitle="No titles match your search"

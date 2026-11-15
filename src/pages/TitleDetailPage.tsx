@@ -38,7 +38,7 @@ import { formatCurrency } from '@/lib/utils'
 export const TitleDetailPage: React.FC = () => {
   const { titleId } = useParams<{ titleId: string }>()
   const navigate = useNavigate()
-  const { data: title, isLoading } = useTitle(titleId)
+  const { data: title, isLoading, error } = useTitle(titleId)
   const { data: locations } = useLocations()
   const addCopy = useAddCopy()
   const updateCopyStatus = useUpdateCopyStatus()
@@ -172,6 +172,17 @@ export const TitleDetailPage: React.FC = () => {
 
   if (isLoading) {
     return <div className="p-8 text-center text-slate-400">Loading title details...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-xl space-y-4 rounded-2xl border border-red-200 bg-white p-8 text-center dark:border-red-900 dark:bg-slate-900">
+        <AlertTriangle className="mx-auto h-8 w-8 text-red-600" />
+        <h3 className="text-lg font-bold">Book details could not be loaded</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{error.message}</p>
+        <Link to="/catalog"><Button variant="outline">Back to Catalog</Button></Link>
+      </div>
+    )
   }
 
   if (!title) {

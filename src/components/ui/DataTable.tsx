@@ -42,6 +42,7 @@ export interface DataTableProps<T> {
   bulkActions?: React.ReactNode
   pageSize?: number
   className?: string
+  compact?: boolean
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -59,6 +60,7 @@ export function DataTable<T extends Record<string, any>>({
   onSelectionChange,
   pageSize = 10,
   className,
+  compact = false,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortKey, setSortKey] = useState<string | null>(null)
@@ -213,7 +215,8 @@ export function DataTable<T extends Record<string, any>>({
                   key={col.key}
                   style={{ width: col.width }}
                   className={cn(
-                    'px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 select-none text-xs uppercase tracking-wider',
+                    compact ? 'px-3 py-2' : 'px-4 py-3',
+                    'font-semibold text-slate-700 dark:text-slate-300 select-none text-xs uppercase tracking-wider',
                     col.sortable && 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80',
                     col.align === 'center' && 'text-center',
                     col.align === 'right' && 'text-right'
@@ -324,7 +327,8 @@ export function DataTable<T extends Record<string, any>>({
                       <td
                         key={col.key}
                         className={cn(
-                          'px-4 py-3 text-slate-700 dark:text-slate-300',
+                          compact ? 'px-3 py-2' : 'px-4 py-3',
+                          'text-slate-700 dark:text-slate-300',
                           col.align === 'center' && 'text-center',
                           col.align === 'right' && 'text-right'
                         )}
@@ -335,7 +339,7 @@ export function DataTable<T extends Record<string, any>>({
 
                     {rowActions && (
                       <td
-                        className="px-4 py-3 text-right"
+                        className={cn(compact ? 'px-3 py-2' : 'px-4 py-3', 'text-right')}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <DropdownMenu
