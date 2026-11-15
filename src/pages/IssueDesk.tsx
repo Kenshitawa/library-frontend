@@ -257,7 +257,7 @@ export const IssueDesk: React.FC = () => {
           overrideReason: item.override ? 'Librarian desk override' : undefined,
         })
         issuedCount += 1
-        handleReceipt({ ...item, issued: true, issue }, 'download')
+        scheduleIssueReceiptDownload({ ...item, issued: true, issue })
         setSessionBooks((prev) =>
           prev.map((book) =>
             book.copy.id === item.copy.id ? { ...book, issued: true, issue } : book
@@ -313,6 +313,14 @@ export const IssueDesk: React.FC = () => {
         text: err instanceof Error ? err.message : 'Could not create the issue receipt.',
       })
     }
+  }
+
+  const scheduleIssueReceiptDownload = (item: ScannedBookSessionItem) => {
+    // Let the issue confirmation paint before jsPDF builds the receipt on the
+    // main thread. This keeps receipt creation from extending the button's INP.
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => handleReceipt(item, 'download'), 0)
+    })
   }
 
   const handleClearSession = () => {
