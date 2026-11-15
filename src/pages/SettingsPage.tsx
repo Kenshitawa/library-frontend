@@ -15,6 +15,8 @@ import {
   CalendarClock,
   Download,
   Monitor,
+  Printer,
+  ScanLine,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -45,6 +47,9 @@ export const SettingsPage: React.FC = () => {
   const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(
     () => localStorage.getItem('library-notification-sound') === 'on'
   )
+  const [scannerTestValue, setScannerTestValue] = useState('')
+  const [preferredPrinter, setPreferredPrinter] = useState(() => localStorage.getItem('library-preferred-printer') || '')
+  const [printPaperSize, setPrintPaperSize] = useState(() => localStorage.getItem('library-print-paper-size') || 'A4')
 
   // Profile Form
   const [profileForm, setProfileForm] = useState({
@@ -191,6 +196,13 @@ export const SettingsPage: React.FC = () => {
     }
   }
 
+  const saveDeviceSettings = (event: React.FormEvent) => {
+    event.preventDefault()
+    localStorage.setItem('library-preferred-printer', preferredPrinter.trim())
+    localStorage.setItem('library-print-paper-size', printPaperSize)
+    toast.success('Scanner and printer preferences saved on this device.')
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -211,6 +223,7 @@ export const SettingsPage: React.FC = () => {
           <TabsTrigger value="classes">Classes & Streams</TabsTrigger>
           <TabsTrigger value="charges">Charge & Fee Rules</TabsTrigger>
           <TabsTrigger value="automation">Notifications & Reports</TabsTrigger>
+          <TabsTrigger value="devices">Scanner & Printer</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Profile */}
@@ -550,6 +563,71 @@ export const SettingsPage: React.FC = () => {
                     Open inventory report
                   </Button>
                 </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="devices">
+          <style>{`@page { size: ${printPaperSize.toLowerCase()} portrait; } @media print { body * { visibility: hidden !important; } #device-print-test, #device-print-test * { visibility: visible !important; } #device-print-test { display: block !important; position: absolute; inset: 24mm; } }`}</style>
+          <div id="device-print-test" className="hidden">
+            <h1>School Library</h1>
+            <h2>Printer test page</h2>
+            <p>This confirms that your browser can print from the library system.</p>
+            <p>Selected paper size: {printPaperSize}</p>
+            <p>Printed: {new Date().toLocaleString()}</p>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle><span className="inline-flex items-center gap-2"><ScanLine className="h-5 w-5" /> Barcode scanner</span></CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Most USB and Bluetooth barcode scanners work as a keyboard. Pair the scanner with this computer, set its suffix to Enter, then scan into a barcode field on Issue or Return.
+                </p>
+                <Input
+                  label="Try a scan"
+                  value={scannerTestValue}
+                  onChange={(event) => setScannerTestValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      toast.success(scannerTestValue ? `Scanner read ${scannerTestValue}` : 'Scan a barcode first.')
+                    }
+                  }}
+                  placeholder="Focus here, then scan a barcode"
+                />
+                <p className="text-xs text-slate-500">The scanner test does not create or update a catalog record.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle><span className="inline-flex items-center gap-2"><Printer className="h-5 w-5" /> Printer and catalog</span></CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4" onSubmit={saveDeviceSettings}>
+                  <Input
+                    label="Preferred printer (this device)"
+                    value={preferredPrinter}
+                    onChange={(event) => setPreferredPrinter(event.target.value)}
+                    placeholder="e.g. Library Office Printer"
+                  />
+                  <Select
+                    label="Paper size"
+                    options={[{ value: 'A4', label: 'A4' }, { value: 'Letter', label: 'Letter' }]}
+                    value={printPaperSize}
+                    onChange={(event) => setPrintPaperSize(event.target.value)}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Your browser opens the system print dialog, where you choose the connected printer, paper tray, and copies. Use Catalog → Print catalog to print the current catalog view.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" leftIcon={<Save className="h-4 w-4" />}>Save preferences</Button>
+                    <Button type="button" variant="outline" leftIcon={<Printer className="h-4 w-4" />} onClick={() => window.print()}>Print test page</Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
           </div>

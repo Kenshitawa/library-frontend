@@ -257,6 +257,7 @@ export const IssueDesk: React.FC = () => {
           overrideReason: item.override ? 'Librarian desk override' : undefined,
         })
         issuedCount += 1
+        handleReceipt({ ...item, issued: true, issue }, 'download')
         setSessionBooks((prev) =>
           prev.map((book) =>
             book.copy.id === item.copy.id ? { ...book, issued: true, issue } : book

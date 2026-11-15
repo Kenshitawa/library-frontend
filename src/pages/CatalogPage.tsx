@@ -206,29 +206,18 @@ export const CatalogPage: React.FC = () => {
 
   const columns: Column<Title>[] = [
     {
-      key: 'cover',
-      header: 'Cover',
-      width: '60px',
-      accessor: (row) => (
-        <div className="flex h-12 w-9 items-center justify-center rounded bg-slate-100 text-slate-400 dark:bg-slate-800 overflow-hidden shadow-sm">
-          {row.cover_url ? (
-            <img src={row.cover_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <BookOpen className="h-4 w-4" />
-          )}
-        </div>
-      ),
-    },
-    {
       key: 'title',
-      header: 'Title & Author',
+      header: 'Title, cover & author',
       sortable: true,
       accessor: (row) => (
-        <div className="flex flex-col">
-          <span className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary transition-colors">
-            {row.title}
-          </span>
-          <span className="text-xs text-slate-500">by {row.author || 'Unknown'}</span>
+        <div className="flex min-w-[16rem] items-center gap-3">
+          <div className="flex h-14 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-slate-100 text-slate-400 shadow-sm dark:bg-slate-800">
+            {row.cover_url ? <img src={row.cover_url} alt={`Cover preview for ${row.title}`} className="h-full w-full object-cover" /> : <BookOpen className="h-4 w-4" />}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-100">{row.title}</span>
+            <span className="text-xs text-slate-500">by {row.author || 'Unknown'}</span>
+          </div>
         </div>
       ),
     },
@@ -288,7 +277,8 @@ export const CatalogPage: React.FC = () => {
   ]
 
   return (
-    <div className="space-y-6">
+    <div id="catalog-printable" className="space-y-6">
+      <style>{`@page { size: ${localStorage.getItem('library-print-paper-size') === 'Letter' ? 'letter' : 'A4'} portrait; } @media print { body * { visibility: hidden !important; } #catalog-printable, #catalog-printable * { visibility: visible !important; } #catalog-printable { position: absolute; inset: 0; width: 100%; padding: 0; } #catalog-printable .catalog-no-print { display: none !important; } }`}</style>
       {/* Header */}
       <div className="flex flex-col gap-4 rounded-card border border-[#315c4d] bg-[#275344] p-5 text-white shadow-sm dark:border-[#345d4c] dark:bg-[#1d4034] sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-start gap-3">
@@ -303,18 +293,18 @@ export const CatalogPage: React.FC = () => {
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          className="border-white/40 text-white hover:bg-white/10"
-          leftIcon={<Plus className="h-4 w-4" />}
-          onClick={handleOpenAddDialog}
-        >
-          Add Title
-        </Button>
+        <div className="catalog-no-print flex flex-wrap gap-2">
+          <Button variant="outline" className="border-white/40 text-white hover:bg-white/10" onClick={() => window.print()}>
+            Print catalog
+          </Button>
+          <Button variant="outline" className="border-white/40 text-white hover:bg-white/10" leftIcon={<Plus className="h-4 w-4" />} onClick={handleOpenAddDialog}>
+            Add Title
+          </Button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#e2ead9] dark:bg-[#27392f] p-4 rounded-card border border-[#c3d1b7] dark:border-[#3a5142] shadow-sm">
+      <div className="catalog-no-print grid grid-cols-1 gap-3 rounded-card border border-[#c3d1b7] bg-[#e2ead9] p-4 shadow-sm dark:border-[#3a5142] dark:bg-[#27392f] sm:grid-cols-2 lg:grid-cols-4">
         <Input
           placeholder="Search by title, author, ISBN..."
           leftAddon={<Search className="h-4 w-4" />}

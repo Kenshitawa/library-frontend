@@ -46,7 +46,7 @@ export const BorrowersPage: React.FC = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
 
   const { data: borrowers, isLoading } = useBorrowers(filters)
-  const { data: borrowerTypes } = useBorrowerTypes()
+  const { data: borrowerTypes, isLoading: borrowerTypesLoading, isError: borrowerTypesError } = useBorrowerTypes()
   const { data: classes } = useClasses()
   const createBorrower = useCreateBorrower()
   const updateBorrower = useUpdateBorrower()
@@ -114,6 +114,17 @@ export const BorrowersPage: React.FC = () => {
 
     if (isLearner && !newBorrower.class_id) {
       setFormError('Choose a class for this learner.')
+      return
+    }
+
+    const kenyanPhone = /^0[17]\d{8}$/
+    const phoneFields = [
+      ['Phone number', newBorrower.phone],
+      ['Parent / guardian phone', newBorrower.guardian_phone],
+    ] as const
+    const invalidPhone = phoneFields.find(([, value]) => value.trim() && !kenyanPhone.test(value.trim()))
+    if (invalidPhone) {
+      setFormError(`${invalidPhone[0]} must be 10 digits and start with 07 or 01.`)
       return
     }
 
@@ -307,22 +318,29 @@ export const BorrowersPage: React.FC = () => {
         onClose={() => setAddDialogOpen(false)}
         maxWidth="lg"
       >
-        <DialogHeader>
-          <DialogTitle>Register New Borrower</DialogTitle>
-          <DialogDescription>
-            Save a learner or teacher profile for issuing and returning books.
-          </DialogDescription>
+        <DialogHeader className="border-b border-slate-200 bg-slate-50/80 dark:border-[#33483a] dark:bg-[#17271e]">
+          <div className="flex items-start gap-3">
+            <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-[#254936] dark:text-[#a4dfb6]">
+              <Users className="h-5 w-5" />
+            </span>
+            <div>
+              <DialogTitle>Register a borrower</DialogTitle>
+              <DialogDescription>Create a learner or staff record for borrowing library books.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleCreateSubmit}>
-          <DialogBody className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+          <DialogBody className="max-h-[70vh] space-y-5 overflow-y-auto px-1 py-5">
             {formError && (
               <div className="rounded-md bg-danger-50 p-3 text-xs text-danger font-medium">
                 {formError}
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-[#33483a] dark:bg-[#14221b]">
+              <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Basic details</h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 label="Full Name"
                 required
@@ -342,8 +360,16 @@ export const BorrowersPage: React.FC = () => {
               <Select
                 label="Borrower Type"
                 required
+                disabled={borrowerTypesLoading || borrowerTypesError || !(borrowerTypes?.length)}
+                description={borrowerTypesLoading
+                  ? 'Loading borrower types…'
+                  : borrowerTypesError
+                    ? 'Could not load borrower types. Refresh the page or check your connection.'
+                    : !borrowerTypes?.length
+                      ? 'No borrower types are set up yet. Add Learner and Teacher under Settings.'
+                      : undefined}
                 options={[
-                  { value: '', label: 'Select Type...' },
+                  { value: '', label: borrowerTypesLoading ? 'Loading types…' : 'Choose a borrower type' },
                   ...(borrowerTypes || []).map((t) => ({ value: t.id, label: t.name })),
                 ]}
                 value={newBorrower.borrower_type_id}
@@ -355,9 +381,22 @@ export const BorrowersPage: React.FC = () => {
                   }))
                 }
               />
+              {!isLearner && selectedBorrowerType && (
+                <Input
+                  label="Department"
+                  wrapperClassName="mt-4"
+                  value={newBorrower.department}
+                  onChange={(e) => setNewBorrower({ ...newBorrower, department: e.target.value })}
+                  placeholder="e.g. Mathematics"
+                />
+              )}
+              </div>
+            </section>
 
               {isLearner && (
-                <>
+                <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-[#33483a] dark:bg-[#17271e]">
+                  <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Learner details</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Select
                     label="Class"
                     required
@@ -374,14 +413,23 @@ export const BorrowersPage: React.FC = () => {
                     value={newBorrower.date_of_birth}
                     onChange={(e) => setNewBorrower({ ...newBorrower, date_of_birth: e.target.value })}
                   />
-                </>
+                  </div>
+                </section>
               )}
 
-              <Input
+              <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-[#33483a] dark:bg-[#14221b]">
+                <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Contact details</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
                 label="Phone number"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                pattern="0[17][0-9]{8}"
                 value={newBorrower.phone}
-                onChange={(e) => setNewBorrower({ ...newBorrower, phone: e.target.value })}
-                placeholder="+27..."
+                onChange={(e) => setNewBorrower({ ...newBorrower, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                placeholder="07XXXXXXXX or 01XXXXXXXX"
+                description="10 digits, starting with 07 or 01."
               />
 
               <Input
@@ -389,7 +437,7 @@ export const BorrowersPage: React.FC = () => {
                 type="email"
                 value={newBorrower.email}
                 onChange={(e) => setNewBorrower({ ...newBorrower, email: e.target.value })}
-                placeholder="sindi@school.example"
+                placeholder="name@school.example"
               />
 
               {isLearner && (
@@ -403,9 +451,12 @@ export const BorrowersPage: React.FC = () => {
                   <Input
                     label="Parent / guardian phone"
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    pattern="0[17][0-9]{8}"
                     value={newBorrower.guardian_phone}
-                    onChange={(e) => setNewBorrower({ ...newBorrower, guardian_phone: e.target.value })}
-                    placeholder="+27..."
+                    onChange={(e) => setNewBorrower({ ...newBorrower, guardian_phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    placeholder="07XXXXXXXX or 01XXXXXXXX"
                   />
                   <Input
                     label="Parent / guardian email"
@@ -416,16 +467,8 @@ export const BorrowersPage: React.FC = () => {
                   />
                 </>
               )}
-
-              {!isLearner && selectedBorrowerType && (
-                <Input
-                  label="Department"
-                  value={newBorrower.department}
-                  onChange={(e) => setNewBorrower({ ...newBorrower, department: e.target.value })}
-                  placeholder="e.g. Mathematics"
-                />
-              )}
-            </div>
+                </div>
+              </section>
             <Input
               label="Notes (optional)"
               value={newBorrower.notes}
