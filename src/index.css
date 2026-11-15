@@ -15,6 +15,8 @@
   --text-primary: #17231d;
   --text-secondary: #526354;
   --text-muted: #68796b;
+  --page-accent-soft: #e1f2eb;
+  --page-shadow: 0 1px 3px rgb(20 50 38 / 8%), 0 8px 24px rgb(20 50 38 / 4%);
 }
 
 html.dark {
@@ -27,12 +29,24 @@ html.dark {
   --text-primary: #f0f5ef;
   --text-secondary: #c5d2c7;
   --text-muted: #a4b4a7;
+  --page-accent-soft: #203b31;
+  --page-shadow: 0 8px 24px rgb(0 0 0 / 18%);
 }
 
 @layer base {
   html { font-family: 'Inter', system-ui, sans-serif; font-size: 15px; }
-  body { background-color: var(--app-bg); color: var(--text-primary); }
+  body { background-color: var(--app-bg); color: var(--text-primary); transition: background-color 150ms ease, color 150ms ease; }
   * { border-color: var(--surface-border); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  main > div > div > .space-y-6 {
+    animation: page-arrive 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes page-arrive {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 html.dark .text-primary {

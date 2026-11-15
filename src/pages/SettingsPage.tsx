@@ -215,7 +215,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="overflow-x-auto max-w-full">
+        <TabsList className="max-w-full">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
           <TabsTrigger value="borrower_types">Borrower Policies</TabsTrigger>
           <TabsTrigger value="locations">Locations & Shelves</TabsTrigger>

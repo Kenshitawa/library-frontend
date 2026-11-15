@@ -27,23 +27,72 @@ import { Badge } from '@/components/ui/Badge'
 import { useDashboardStats, useDueSoon, useOverdue } from '@/hooks/useIssues'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { formatDate, daysUntilDue } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 
-// 30-day activity simulation for the chart
-const mockChartData = Array.from({ length: 30 }).map((_, i) => {
-  const d = new Date()
-  d.setDate(d.getDate() - (29 - i))
-  return {
-    date: d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' }),
-    issues: Math.floor(Math.sin(i / 3) * 8 + 12 + (i % 5)),
-    returns: Math.floor(Math.cos(i / 3) * 6 + 10 + (i % 4)),
+function activityPath(log: any): string {
+  const entity = String(log.entity || '').toLowerCase()
+  const id = log.entity_id ? `/${log.entity_id}` : ''
+  if (entity.includes('borrower')) return `/borrowers${id}`
+  if (entity.includes('title') || entity.includes('copy')) return `/catalog${id}`
+  if (entity.includes('issue') || entity.includes('circulation')) {
+    const action = String(log.action || '').toLowerCase()
+    return action.includes('return') ? '/return' : '/issue'
   }
-})
+  if (entity.includes('charge') || entity.includes('payment')) return '/charges'
+  if (entity.includes('reservation')) return '/reservations'
+  if (entity.includes('user')) return '/users'
+  if (entity.includes('notification')) return '/notifications'
+  return '/audit'
+}
+
+function dayKey(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Nairobi', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date)
+  const part = (type: string) => parts.find((item) => item.type === type)?.value || ''
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
 
 export const DashboardPage: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: dueSoonList } = useDueSoon()
   const { data: overdueList } = useOverdue()
   const { data: recentActivity } = useAuditLog()
+  const chartStart = new Date()
+  chartStart.setDate(chartStart.getDate() - 29)
+  chartStart.setHours(0, 0, 0, 0)
+  const { data: activityChartData = [] } = useQuery({
+    queryKey: ['dashboard-circulation-chart', dayKey(chartStart)],
+    queryFn: async () => {
+      const since = chartStart.toISOString()
+      const [issuedResult, returnedResult] = await Promise.all([
+        (supabase as any).from('issues').select('issued_at').gte('issued_at', since),
+        (supabase as any).from('issues').select('returned_at').not('returned_at', 'is', null).gte('returned_at', since),
+      ])
+      if (issuedResult.error) throw new Error(issuedResult.error.message)
+      if (returnedResult.error) throw new Error(returnedResult.error.message)
+      const counts = new Map<string, { issues: number; returns: number }>()
+      for (let offset = 0; offset < 30; offset += 1) {
+        const date = new Date(chartStart)
+        date.setDate(date.getDate() + offset)
+        counts.set(dayKey(date), { issues: 0, returns: 0 })
+      }
+      for (const row of issuedResult.data || []) {
+        const count = counts.get(dayKey(new Date(row.issued_at)))
+        if (count) count.issues += 1
+      }
+      for (const row of returnedResult.data || []) {
+        const count = counts.get(dayKey(new Date(row.returned_at)))
+        if (count) count.returns += 1
+      }
+      return Array.from(counts, ([key, count]) => ({
+        date: new Date(`${key}T12:00:00+03:00`).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' }),
+        ...count,
+      }))
+    },
+    staleTime: 60_000,
+  })
 
   return (
     <div className="space-y-6">
@@ -141,7 +190,7 @@ export const DashboardPage: React.FC = () => {
         <CardContent className="pt-4">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={activityChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-slate-100 dark:stroke-slate-800" />
                 <XAxis
                   dataKey="date"
@@ -306,9 +355,10 @@ export const DashboardPage: React.FC = () => {
           {recentActivity && recentActivity.length > 0 ? (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {recentActivity.slice(0, 6).map((log: any) => (
-                <div
+                <Link
+                  to={activityPath(log)}
                   key={log.id}
-                  className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors text-xs"
+                  className="group flex items-center justify-between gap-3 px-6 py-3.5 text-xs transition-colors duration-150 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-slate-800/40"
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -323,10 +373,11 @@ export const DashboardPage: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <span className="text-slate-400 shrink-0">
+                  <span className="flex shrink-0 items-center gap-2 text-slate-400">
                     {formatDate(log.timestamp)}
+                    <ChevronRight className="h-4 w-4 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-primary" />
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

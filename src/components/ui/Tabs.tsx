@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { cn } from '@/lib/utils'
+import { cx } from '@/utils/cx'
 
 interface TabsContextValue {
   value: string
@@ -23,7 +23,7 @@ export const Tabs: React.FC<TabsProps> = ({
 }) => {
   return (
     <TabsContext.Provider value={{ value, onValueChange }}>
-      <div className={cn('w-full flex flex-col', className)}>{children}</div>
+      <div className={cx('w-full flex flex-col', className)}>{children}</div>
     </TabsContext.Provider>
   )
 }
@@ -34,8 +34,8 @@ export const TabsList: React.FC<TabsListProps> = ({ className, children, ...prop
   return (
     <div
       role="tablist"
-      className={cn(
-        'inline-flex items-center border-b border-slate-200 dark:border-slate-800 space-x-1',
+      className={cx(
+        'flex w-full flex-wrap items-stretch gap-1 rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-inset)] p-1.5',
         className
       )}
       {...props}
@@ -68,11 +68,11 @@ export const TabsTrigger: React.FC<TabsTriggerProps> = ({
       type="button"
       aria-selected={isActive}
       onClick={() => context.onValueChange(value)}
-      className={cn(
-        'inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors select-none -mb-px',
+      className={cx(
+        'inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-center text-xs font-medium leading-4 transition-[color,background-color,box-shadow] duration-150 select-none sm:flex-none sm:px-4 sm:text-sm',
         isActive
-          ? 'border-primary text-primary dark:text-primary-400 font-semibold'
-          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200',
+          ? 'bg-[var(--surface)] text-primary shadow-sm font-semibold'
+          : 'text-[var(--text-secondary)] hover:bg-[var(--surface)]/60 hover:text-[var(--text-primary)]',
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ export const TabsTrigger: React.FC<TabsTriggerProps> = ({
       {children}
       {badge !== undefined && (
         <span
-          className={cn(
+          className={cx(
             'rounded-full px-2 py-0.5 text-xs',
             isActive
               ? 'bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300'
@@ -112,7 +112,7 @@ export const TabsContent: React.FC<TabsContentProps> = ({
   return (
     <div
       role="tabpanel"
-      className={cn('pt-4 focus-visible:outline-none', className)}
+      className={cx('pt-4 focus-visible:outline-none', className)}
       {...props}
     >
       {children}

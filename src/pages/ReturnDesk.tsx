@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useReturnCopy } from '@/hooks/useIssues'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Issue, Copy, CopyCondition } from '@/types'
 import { formatDate, daysUntilDue } from '@/lib/utils'
@@ -63,7 +64,22 @@ export const ReturnDesk: React.FC = () => {
   const { user, profile } = useAuth()
   const { profile: libraryProfile } = useLibraryProfile()
   const returnCopy = useReturnCopy()
+  const queryClient = useQueryClient()
   const scanInputRef = useRef<HTMLInputElement>(null)
+  const { data: recentReturns = [] } = useQuery({
+    queryKey: ['recent-circulation', 'returned'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('issues')
+        .select('id, returned_at, borrower:borrowers(id, name, borrower_no), copy:copies(title:titles(title))')
+        .not('returned_at', 'is', null)
+        .order('returned_at', { ascending: false })
+        .limit(3)
+      if (error) throw new Error(error.message)
+      return data || []
+    },
+    staleTime: 30_000,
+  })
 
   const [scanQuery, setScanQuery] = useState('')
   const [currentIssue, setCurrentIssue] = useState<Issue | null>(null)
@@ -72,10 +88,27 @@ export const ReturnDesk: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [sessionReturns, setSessionReturns] = useState<ReturnedSessionItem[]>([])
   const [deskMessage, setDeskMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [matchingTitles, setMatchingTitles] = useState<Array<{ id: string; title: string }>>([])
 
   useEffect(() => {
     scanInputRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    if (scanQuery.trim().length < 2) {
+      setMatchingTitles([])
+      return
+    }
+    const timer = window.setTimeout(async () => {
+      const { data } = await (supabase as any)
+        .from('titles')
+        .select('id, title')
+        .ilike('title', `%${scanQuery.trim()}%`)
+        .limit(8)
+      setMatchingTitles(data || [])
+    }, 180)
+    return () => window.clearTimeout(timer)
+  }, [scanQuery])
 
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +118,7 @@ export const ReturnDesk: React.FC = () => {
 
     try {
       // 1. Look up copy by barcode
-      const { data: copyData } = await (supabase as any)
+      let { data: copyData } = await (supabase as any)
         .from('copies')
         .select(`
           *,
@@ -94,9 +127,49 @@ export const ReturnDesk: React.FC = () => {
         .eq('barcode', query)
         .maybeSingle()
 
+      // Staff may use a title when a barcode is damaged or unavailable.
+      let matchedBookTitle = false
+      if (!copyData) {
+        const { data: titles } = await (supabase as any)
+          .from('titles')
+          .select('id')
+          .ilike('title', `%${query}%`)
+          .limit(10)
+        matchedBookTitle = Boolean(titles?.length)
+        const titleIds = (titles || []).map((title: any) => title.id)
+        if (titleIds.length) {
+          const { data: copies } = await (supabase as any)
+            .from('copies')
+            .select('id')
+            .in('title_id', titleIds)
+          const copyIds = (copies || []).map((copy: any) => copy.id)
+          if (copyIds.length) {
+            const { data: issueByTitle } = await (supabase as any)
+              .from('issues')
+              .select(`*, copy:copies(*, title:titles(*)), borrower:borrowers(*, class:classes(*))`)
+              .in('copy_id', copyIds)
+              .eq('status', 'open')
+              .order('issued_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            if (issueByTitle) {
+              setCurrentIssue(issueByTitle as Issue)
+              setReturnCondition(((issueByTitle as any).condition_at_issue as CopyCondition) || 'good')
+              setDamageNote('')
+              playSound('success')
+              setScanQuery('')
+              return
+            }
+          }
+        }
+      }
+
       if (!copyData) {
         playSound('error')
-        setDeskMessage({ type: 'error', text: `Barcode "${query}" not found in catalog.` })
+        setDeskMessage({
+          type: 'error',
+          text: matchedBookTitle ? `No active loan found for "${query}".` : `Barcode or book title "${query}" not found in catalog.`,
+        })
         setScanQuery('')
         return
       }
@@ -160,6 +233,7 @@ export const ReturnDesk: React.FC = () => {
       }
 
       playSound('success')
+      await queryClient.invalidateQueries({ queryKey: ['recent-circulation', 'returned'] })
       setDeskMessage({
         type: 'success',
         text: `Successfully checked in "${currentIssue.copy?.title?.title}" from ${currentIssue.borrower?.name}!`,
@@ -244,14 +318,18 @@ export const ReturnDesk: React.FC = () => {
           <form onSubmit={handleScanSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <input
+                list="return-book-title-suggestions"
                 ref={scanInputRef}
                 type="text"
                 value={scanQuery}
                 onChange={(e) => setScanQuery(e.target.value)}
-                placeholder="Scan returned book barcode (Press Enter)..."
+                placeholder="Scan barcode or type the book title…"
                 className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-slate-50 dark:bg-slate-900 px-4 py-3 pl-12 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
                 autoComplete="off"
               />
+              <datalist id="return-book-title-suggestions">
+                {matchingTitles.map((title) => <option key={title.id} value={title.title} />)}
+              </datalist>
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary pointer-events-none" />
             </div>
             <Button type="submit" variant="primary" className="px-6 text-base">
@@ -275,6 +353,21 @@ export const ReturnDesk: React.FC = () => {
               <span>{deskMessage.text}</span>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between py-3">
+          <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-success" /><CardTitle className="text-sm">Latest book returns</CardTitle></div>
+          <span className="text-xs text-slate-500">Last 3</span>
+        </CardHeader>
+        <CardContent className="grid gap-2 p-3 sm:grid-cols-3">
+          {recentReturns.length ? recentReturns.map((item: any) => (
+            <div key={item.id} className="min-w-0 rounded-xl border border-slate-200/80 bg-white/60 p-3 dark:border-slate-700 dark:bg-slate-900/30">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{item.borrower?.name || 'Borrower'}</p>
+              <p className="mt-1 truncate text-xs text-slate-500">{item.copy?.title?.title || 'Book title'} · {item.borrower?.borrower_no || ''}</p>
+            </div>
+          )) : <p className="px-2 py-3 text-sm text-slate-500 sm:col-span-3">No books returned yet.</p>}
         </CardContent>
       </Card>
 

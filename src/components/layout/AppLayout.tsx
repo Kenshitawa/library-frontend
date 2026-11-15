@@ -75,7 +75,7 @@ export const AppLayout: React.FC = () => {
   ]
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#eff1e5] dark:bg-[#111e18] text-slate-900 dark:text-slate-100">
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors duration-150">
       {/* Desktop / Tablet Sidebar */}
       <Sidebar
         collapsed={collapsed}
@@ -89,7 +89,7 @@ export const AppLayout: React.FC = () => {
           onToggleMobileNav={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>

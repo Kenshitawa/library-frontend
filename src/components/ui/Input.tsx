@@ -1,5 +1,5 @@
 import React, { forwardRef, useId } from 'react'
-import { cn } from '@/lib/utils'
+import { cx } from '@/utils/cx'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -32,7 +32,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const descId = `${inputId}-desc`
 
     return (
-      <div className={cn('w-full flex flex-col gap-1.5', wrapperClassName)}>
+      <div className={cx('w-full flex flex-col gap-1.5', wrapperClassName)}>
         {label && (
           <label
             htmlFor={inputId}
@@ -58,13 +58,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={
               error ? errorId : description ? descId : undefined
             }
-            className={cn(
-              'w-full rounded-button border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors',
+            className={cx(
+              'w-full rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm text-[var(--text-primary)] transition-[border-color,box-shadow,background-color] duration-150',
               'placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
               'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400',
-              'dark:border-[#40584a] dark:bg-[#14221b] dark:text-[#f0f5ef] dark:placeholder:text-[#9caf9f]',
-              'dark:focus:border-[#84d1a7] dark:focus:ring-[#84d1a7]/20',
-              'dark:disabled:bg-[#202f27] dark:disabled:text-[#91a296]',
+              'placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-primary/20',
+              'disabled:cursor-not-allowed disabled:bg-[var(--surface-inset)] disabled:text-[var(--text-muted)]',
               leftAddon && 'pl-10',
               rightAddon && 'pr-10',
               error && 'border-danger focus:border-danger focus:ring-danger/20',

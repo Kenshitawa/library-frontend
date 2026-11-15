@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn } from '@/lib/utils'
+import { cx } from '@/utils/cx'
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean
@@ -8,10 +8,9 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card: React.FC<CardProps> = ({ className, hoverable, children, ...props }) => {
   return (
     <div
-      className={cn(
-        'rounded-card border border-[#cdd8c3] bg-[#fbfbf4] text-slate-900 shadow-card transition-all duration-150',
-        'dark:border-[#3a5145] dark:bg-[#1a2922] dark:text-[#f0f5ef] dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)]',
-        hoverable && 'hover:shadow-card-hover hover:border-[#9fb58f] dark:hover:border-[#668674]',
+      className={cx(
+        'rounded-2xl border border-[var(--surface-border)] bg-[var(--surface)] text-[var(--text-primary)] shadow-card transition-[box-shadow,border-color,background-color] duration-150',
+        hoverable && 'hover:shadow-card-hover hover:border-primary/40',
         className
       )}
       {...props}
@@ -28,7 +27,7 @@ export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => {
   return (
     <div
-      className={cn('flex flex-col space-y-1.5 p-6 border-b border-slate-100 dark:border-[#344a3d]', className)}
+      className={cx('flex flex-col space-y-1.5 border-b border-[var(--surface-border)] p-5 sm:p-6', className)}
       {...props}
     >
       {children}
@@ -43,7 +42,7 @@ export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
 }) => {
   return (
     <h3
-      className={cn('text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100', className)}
+      className={cx('text-lg font-semibold leading-tight tracking-tight text-[var(--text-primary)]', className)}
       {...props}
     >
       {children}
@@ -57,7 +56,7 @@ export const CardDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement
   ...props
 }) => {
   return (
-    <p     className={cn('text-sm text-slate-500 dark:text-[#b4c3b6]', className)} {...props}>
+    <p     className={cx('text-sm text-[var(--text-secondary)]', className)} {...props}>
       {children}
     </p>
   )
@@ -69,7 +68,7 @@ export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   return (
-    <div className={cn('p-6', className)} {...props}>
+    <div className={cx('p-4 sm:p-6', className)} {...props}>
       {children}
     </div>
   )
@@ -82,8 +81,8 @@ export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => {
   return (
     <div
-      className={cn(
-        'flex items-center p-6 pt-0 border-t border-slate-100 dark:border-[#344a3d] mt-4',
+      className={cx(
+        'mt-4 flex items-center border-t border-[var(--surface-border)] p-4 pt-4 sm:p-6',
         className
       )}
       {...props}

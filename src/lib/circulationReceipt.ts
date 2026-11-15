@@ -39,66 +39,115 @@ function createCirculationPdf(data: CirculationReceiptData): jsPDF {
   const width = doc.internal.pageSize.getWidth()
   const margin = 14
   const right = width - margin
-  const accent = data.kind === 'issue' ? [15, 118, 110] : [37, 99, 102]
-  const heading = data.kind === 'issue' ? 'BOOK ISSUE RECEIPT' : 'BOOK RETURN RECEIPT'
+  const accent = data.kind === 'issue' ? [16, 111, 99] : [27, 116, 78]
+  const heading = data.kind === 'issue' ? 'BOOK ISSUE' : 'BOOK RETURN'
+  const contentWidth = width - margin * 2
 
+  // Clean, print-friendly masthead with a visible receipt reference.
   doc.setFillColor(accent[0], accent[1], accent[2])
-  doc.rect(0, 0, width, 43, 'F')
+  doc.rect(0, 0, width, 48, 'F')
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(margin, 10, 10, 10, 2, 2, 'F')
+  doc.setDrawColor(accent[0], accent[1], accent[2])
+  doc.setLineWidth(0.8)
+  doc.line(margin + 3, 12, margin + 3, 18)
+  doc.line(margin + 5, 12, margin + 5, 18)
+  doc.line(margin + 7, 12, margin + 7, 18)
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(15)
-  doc.text(data.libraryName || 'School Library', margin, 15)
+  doc.setFontSize(13)
+  doc.text(doc.splitTextToSize(data.libraryName || 'School Library', contentWidth - 18), margin + 14, 15)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  const address = [data.libraryAddress, data.libraryPhone].filter(Boolean).join('  |  ')
-  if (address) doc.text(doc.splitTextToSize(address, width - margin * 2), margin, 22)
+  doc.setFontSize(7.5)
+  const address = [data.libraryAddress, data.libraryPhone].filter(Boolean).join('  ·  ')
+  if (address) doc.text(doc.splitTextToSize(address, contentWidth - 14), margin + 14, 22)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.text(heading, margin, 35)
+  doc.setFontSize(10)
+  doc.text(heading, margin, 39)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.text(`Receipt ${data.receiptNumber}`, right, 35, { align: 'right' })
+  doc.setFontSize(7.5)
+  doc.text(`RECEIPT  ${data.receiptNumber}`, right, 39, { align: 'right' })
 
-  let y = 55
-  const field = (label: string, value: string) => {
+  let y = 54
+  const label = (text: string, x: number, top: number) => {
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(71, 85, 105)
-    doc.setFontSize(8)
-    doc.text(label.toUpperCase(), margin, y)
+    doc.setTextColor(105, 124, 116)
+    doc.setFontSize(7)
+    doc.text(text.toUpperCase(), x, top)
+  }
+  const value = (text: string, x: number, top: number, maxWidth: number, size = 9) => {
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(15, 23, 42)
-    doc.setFontSize(10)
-    const lines = doc.splitTextToSize(value || '—', width - margin * 2 - 35)
-    doc.text(lines, margin + 35, y)
-    y += Math.max(8, lines.length * 5 + 2)
-    doc.setDrawColor(226, 232, 240)
-    doc.line(margin, y - 2, right, y - 2)
+    doc.setTextColor(27, 43, 36)
+    doc.setFontSize(size)
+    const lines = doc.splitTextToSize(text || '—', maxWidth)
+    doc.text(lines, x, top)
+    return lines.length
+  }
+  const separator = (top: number) => {
+    doc.setDrawColor(223, 232, 226)
+    doc.setLineWidth(0.25)
+    doc.line(margin, top, right, top)
   }
 
-  field('Borrower', data.borrowerName)
-  field('Learner number', data.borrowerNumber)
-  if (data.className) field('Class', data.className)
-  field('Book', data.title)
-  field('Barcode', data.barcode)
-  field('Issued', formatDateTime(data.issuedAt))
-  field('Due date', formatDate(data.dueAt))
+  label('Borrower', margin, y)
+  const borrowerLines = value(data.borrowerName, margin, y + 6, contentWidth, 12)
+  y += Math.max(12, borrowerLines * 4 + 8)
+  const half = (contentWidth - 8) / 2
+  label('Admission / staff ID', margin, y)
+  label('Class / department', margin + half + 8, y)
+  value(data.borrowerNumber, margin, y + 5, half)
+  value(data.className || '—', margin + half + 8, y + 5, half)
+  y += 12
+  separator(y)
+  y += 7
+
+  doc.setFillColor(239, 247, 242)
+  doc.roundedRect(margin, y - 4, contentWidth, 26, 2, 2, 'F')
+  label('Book title', margin + 4, y + 1)
+  const titleLines = value(data.title, margin + 4, y + 7, contentWidth - 8, 9.5)
+  label('Barcode', margin + 4, y + 18)
+  value(data.barcode, margin + 27, y + 18, contentWidth - 32, 7.5)
+  y += Math.max(29, titleLines * 4 + 26)
+
+  label('Issued', margin, y)
+  label(data.kind === 'issue' ? 'Return by' : 'Original due date', margin + half + 8, y)
+  value(formatDateTime(data.issuedAt), margin, y + 5, half, 8.5)
+  value(formatDate(data.dueAt), margin + half + 8, y + 5, half, 8.5)
+  y += 13
   if (data.kind === 'return') {
-    field('Returned', data.returnedAt ? formatDateTime(data.returnedAt) : '—')
-    field('Condition', data.condition || 'Good')
-    if (data.daysLate && data.daysLate > 0) field('Days overdue', String(data.daysLate))
+    label('Checked in', margin, y)
+    label('Condition', margin + half + 8, y)
+    value(data.returnedAt ? formatDateTime(data.returnedAt) : '—', margin, y + 5, half, 8.5)
+    value(data.condition || 'Good', margin + half + 8, y + 5, half, 8.5)
+    y += 13
+    if (data.daysLate && data.daysLate > 0) {
+      label('Days overdue', margin, y)
+      value(String(data.daysLate), margin, y + 5, half)
+      y += 11
+    }
   }
-  if (data.processedBy) field('Processed by', data.processedBy)
+  if (data.processedBy) {
+    separator(y)
+    y += 6
+    label('Processed by', margin, y)
+    value(data.processedBy, margin, y + 6, contentWidth)
+    y += 11
+  }
 
-  y += 3
-  doc.setFillColor(240, 249, 248)
-  doc.roundedRect(margin, y, width - margin * 2, 15, 2, 2, 'F')
-  doc.setTextColor(15, 78, 76)
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const noteY = Math.min(y + 3, pageHeight - 26)
+  doc.setFillColor(248, 250, 249)
+  doc.roundedRect(margin, noteY, contentWidth, 13, 2, 2, 'F')
+  doc.setTextColor(62, 86, 75)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
+  doc.setFontSize(7.5)
   const note = data.kind === 'issue'
-    ? 'Keep this receipt and return the book by the due date shown above.'
-    : 'This receipt confirms that the book has been checked back into the library.'
-  doc.text(doc.splitTextToSize(note, width - margin * 2 - 8), margin + 4, y + 6)
+    ? 'Please return this book by the due date above. Keep this receipt for your records.'
+    : 'This receipt confirms the book has been checked back into the library.'
+  doc.text(doc.splitTextToSize(note, contentWidth - 8), margin + 4, noteY + 5)
+  doc.setTextColor(110, 126, 117)
+  doc.setFontSize(6.5)
+  doc.text('School Library · Circulation Record', width / 2, pageHeight - 7, { align: 'center' })
   return doc
 }
 

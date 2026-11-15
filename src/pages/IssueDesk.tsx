@@ -10,6 +10,7 @@ import {
   ArrowRightCircle,
   Trash2,
   Calendar,
+  Clock,
   Download,
   Printer,
 } from 'lucide-react'
@@ -19,6 +20,7 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Select } from '@/components/ui/Select'
 import { useAuth } from '@/hooks/useAuth'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateIssue } from '@/hooks/useIssues'
 import { supabase } from '@/lib/supabase'
 import type { Borrower, Copy, Title, BorrowerType } from '@/types'
@@ -71,7 +73,21 @@ export const IssueDesk: React.FC = () => {
   const { user, profile } = useAuth()
   const { profile: libraryProfile } = useLibraryProfile()
   const createIssue = useCreateIssue()
+  const queryClient = useQueryClient()
   const scanInputRef = useRef<HTMLInputElement>(null)
+  const { data: recentIssued = [] } = useQuery({
+    queryKey: ['recent-circulation', 'issued'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('issues')
+        .select('id, issued_at, borrower:borrowers(id, name, borrower_no, class:classes(name)), copy:copies(title:titles(title))')
+        .order('issued_at', { ascending: false })
+        .limit(3)
+      if (error) throw new Error(error.message)
+      return data || []
+    },
+    staleTime: 30_000,
+  })
 
   const [scanQuery, setScanQuery] = useState('')
   const [selectedBorrower, setSelectedBorrower] = useState<{
@@ -86,11 +102,33 @@ export const IssueDesk: React.FC = () => {
   const [deskMessage, setDeskMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [defaultLoanDays, setDefaultLoanDays] = useState(14)
+  const [matchingTitles, setMatchingTitles] = useState<Array<{ id: string; title: string; subject?: string; grade_level?: string }>>([])
 
   // Keep scan input focused
   useEffect(() => {
     scanInputRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    if (!selectedBorrower || scanQuery.trim().length < 2) {
+      setMatchingTitles([])
+      return
+    }
+    const timer = window.setTimeout(async () => {
+      const { data } = await (supabase as any)
+        .from('titles')
+        .select('id, title, subject:subjects(name), grade_level')
+        .ilike('title', `%${scanQuery.trim()}%`)
+        .limit(8)
+      setMatchingTitles((data || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        subject: row.subject?.name,
+        grade_level: row.grade_level,
+      })))
+    }, 180)
+    return () => window.clearTimeout(timer)
+  }, [scanQuery, selectedBorrower])
 
   // Auto calculate due date
   const calculateDueDate = (days: number) => {
@@ -164,8 +202,9 @@ export const IssueDesk: React.FC = () => {
         }
       }
 
-      // 2. Otherwise scan book barcode
-      const { data: copyData } = await (supabase as any)
+      // 2. Resolve a scanned barcode first, then let staff type a title when
+      // the barcode is missing. Keep the barcode path exact for scanners.
+      let { data: copyData } = await (supabase as any)
         .from('copies')
         .select(`
           *,
@@ -174,9 +213,34 @@ export const IssueDesk: React.FC = () => {
         .eq('barcode', query)
         .maybeSingle()
 
+      let matchedBookTitle = false
+      if (!copyData && selectedBorrower) {
+        const { data: titles } = await (supabase as any)
+          .from('titles')
+          .select('id, title')
+          .ilike('title', `%${query}%`)
+          .limit(5)
+
+        matchedBookTitle = Boolean(titles?.length)
+        const titleIds = (titles || []).map((title: any) => title.id)
+        if (titleIds.length) {
+          const { data: availableCopy } = await (supabase as any)
+            .from('copies')
+            .select(`*, title:titles(*)`)
+            .in('title_id', titleIds)
+            .eq('status', 'available')
+            .limit(1)
+            .maybeSingle()
+          copyData = availableCopy
+        }
+      }
+
       if (!copyData) {
         playSound('error')
-        setDeskMessage({ type: 'error', text: `Barcode "${query}" not found in library inventory.` })
+        setDeskMessage({
+          type: 'error',
+          text: matchedBookTitle ? `No available copies found for "${query}".` : `Barcode or book title "${query}" not found in library inventory.`,
+        })
         setScanQuery('')
         return
       }
@@ -266,6 +330,7 @@ export const IssueDesk: React.FC = () => {
       }
 
       playSound('success')
+      await queryClient.invalidateQueries({ queryKey: ['recent-circulation', 'issued'] })
       setDeskMessage({
         type: 'success',
         text: `Successfully issued ${itemsToIssue.length} book(s) to ${selectedBorrower.borrower.name}!`,
@@ -373,14 +438,18 @@ export const IssueDesk: React.FC = () => {
           <form onSubmit={handleScanSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <input
+                list={selectedBorrower ? 'issue-book-title-suggestions' : undefined}
                 ref={scanInputRef}
                 type="text"
                 value={scanQuery}
                 onChange={(e) => setScanQuery(e.target.value)}
-                placeholder="Scan or type Barcode / Admission # (Press Enter)..."
+                placeholder={selectedBorrower ? 'Scan barcode or type a book title…' : 'Scan learner card or enter admission number…'}
                 className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-slate-50 dark:bg-slate-900 px-4 py-3 pl-12 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
                 autoComplete="off"
               />
+              {selectedBorrower && <datalist id="issue-book-title-suggestions">
+                {matchingTitles.map((title) => <option key={title.id} value={title.title} label={[title.subject, title.grade_level].filter(Boolean).join(' · ')} />)}
+              </datalist>}
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary pointer-events-none" />
             </div>
             <Button type="submit" variant="primary" className="px-6 text-base">
@@ -406,6 +475,21 @@ export const IssueDesk: React.FC = () => {
               <span>{deskMessage.text}</span>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between py-3">
+          <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><CardTitle className="text-sm">Latest book issues</CardTitle></div>
+          <span className="text-xs text-slate-500">Last 3</span>
+        </CardHeader>
+        <CardContent className="grid gap-2 p-3 sm:grid-cols-3">
+          {recentIssued.length ? recentIssued.map((issue: any) => (
+            <div key={issue.id} className="min-w-0 rounded-xl border border-slate-200/80 bg-white/60 p-3 dark:border-slate-700 dark:bg-slate-900/30">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{issue.borrower?.name || 'Borrower'}</p>
+              <p className="mt-1 truncate text-xs text-slate-500">{issue.copy?.title?.title || 'Book title'} · {issue.borrower?.borrower_no || ''}</p>
+            </div>
+          )) : <p className="px-2 py-3 text-sm text-slate-500 sm:col-span-3">No books issued yet.</p>}
         </CardContent>
       </Card>
 
