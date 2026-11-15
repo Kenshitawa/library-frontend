@@ -9,11 +9,13 @@ export interface TitleFilters {
   gradeLevel?: string
   language?: string
   availability?: 'all' | 'available'
+  suggestionsOnly?: boolean
 }
 
 export function useTitles(filters?: TitleFilters) {
   return useQuery({
     queryKey: ['titles', filters],
+    enabled: !filters?.suggestionsOnly || (filters.search?.trim().length ?? 0) >= 2,
     queryFn: async (): Promise<Title[]> => {
       let query = (supabase as any)
         .from('titles')

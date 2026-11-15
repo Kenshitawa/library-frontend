@@ -74,16 +74,25 @@ export const CatalogPage: React.FC = () => {
   const [firstCopyBarcode, setFirstCopyBarcode] = useState('')
   const [firstCopyLocation, setFirstCopyLocation] = useState('')
   const [createdTitleId, setCreatedTitleId] = useState<string | null>(null)
+  const [existingTitleSelected, setExistingTitleSelected] = useState(false)
+  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false)
   const [typeManuallySelected, setTypeManuallySelected] = useState(false)
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [aiMessage, setAiMessage] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const titleSearch = newTitle.title.trim()
+  const { data: titleSuggestions = [], isFetching: isSearchingTitles } = useTitles({
+    search: titleSearch,
+    suggestionsOnly: true,
+  })
 
   const handleOpenAddDialog = () => {
     setNewTitle(createInitialTitle())
     setFirstCopyBarcode('')
     setFirstCopyLocation('')
     setCreatedTitleId(null)
+    setExistingTitleSelected(false)
+    setShowTitleSuggestions(false)
     setTypeManuallySelected(false)
     setAiMessage(null)
     setFormError(null)
@@ -151,6 +160,31 @@ export const CatalogPage: React.FC = () => {
     }
   }
 
+  const handleSelectExistingTitle = (title: Title) => {
+    setCreatedTitleId(title.id)
+    setExistingTitleSelected(true)
+    setShowTitleSuggestions(false)
+    setNewTitle((current) => ({
+      ...current,
+      title: title.title,
+      subtitle: title.subtitle || '',
+      author: title.author || '',
+      isbn10: title.isbn10 || '',
+      isbn13: title.isbn13 || '',
+      publisher: title.publisher || '',
+      year: title.year || new Date().getFullYear(),
+      edition: title.edition || '1st',
+      language: title.language || 'English',
+      subject_id: title.subject_id || '',
+      grade_level: title.grade_level || '',
+      type: title.type,
+      description: title.description || '',
+    }))
+    setFirstCopyBarcode('')
+    setFirstCopyLocation('')
+    setFormError(null)
+  }
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
@@ -197,7 +231,9 @@ export const CatalogPage: React.FC = () => {
     } catch (err: any) {
       const message = err?.message || 'The catalog record could not be saved.'
       setFormError(
-        titleCreatedDuringSubmit || createdTitleId
+        existingTitleSelected
+          ? `The copy was not added: ${message} Check the barcode and try again.`
+          : titleCreatedDuringSubmit || createdTitleId
           ? `Title saved, but the first copy was not added: ${message} Correct the barcode and try again.`
           : message
       )
@@ -351,10 +387,16 @@ export const CatalogPage: React.FC = () => {
         maxWidth="lg"
       >
         <DialogHeader>
-          <DialogTitle>{createdTitleId ? 'Add First Copy' : 'Add New Title'}</DialogTitle>
+          <DialogTitle>
+            {createdTitleId
+              ? existingTitleSelected ? 'Add Copy to Existing Title' : 'Add First Copy'
+              : 'Add New Title'}
+          </DialogTitle>
           <DialogDescription>
             {createdTitleId
-              ? 'The title is saved. Add a barcode for its first physical copy, or finish without adding one.'
+              ? existingTitleSelected
+                ? 'This book is already in your catalog. Add a barcode for another physical copy.'
+                : 'The title is saved. Add a barcode for its first physical copy, or finish without adding one.'
               : 'Enter book details, then add a barcode if you already have a copy ready.'}
           </DialogDescription>
         </DialogHeader>
@@ -364,6 +406,12 @@ export const CatalogPage: React.FC = () => {
             {formError && (
               <div className="rounded-md bg-danger-50 p-3 text-xs text-danger font-medium">
                 {formError}
+              </div>
+            )}
+
+            {existingTitleSelected && (
+              <div className="rounded-md border border-primary-200 bg-primary-50 p-3 text-sm text-primary-900 dark:border-primary-900 dark:bg-primary-950 dark:text-primary-100">
+                Adding a physical copy for <span className="font-semibold">{newTitle.title}</span>
               </div>
             )}
 
@@ -399,13 +447,78 @@ export const CatalogPage: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input
-                label="Title"
-                required
-                value={newTitle.title}
-                onChange={(e) => setNewTitle({ ...newTitle, title: e.target.value })}
-                placeholder="e.g. Platinum Mathematics Grade 9"
-              />
+              <div className="relative z-20">
+                <Input
+                  label="Title"
+                  required
+                  value={newTitle.title}
+                  role="combobox"
+                  aria-expanded={showTitleSuggestions && titleSearch.length >= 2}
+                  aria-controls="catalog-title-suggestions"
+                  aria-autocomplete="list"
+                  onFocus={() => setShowTitleSuggestions(true)}
+                  onChange={(e) => {
+                    setNewTitle({ ...newTitle, title: e.target.value })
+                    setShowTitleSuggestions(true)
+                  }}
+                  placeholder="Start typing a book title"
+                />
+                {showTitleSuggestions && titleSearch.length >= 2 && (
+                  <div
+                    id="catalog-title-suggestions"
+                    role="listbox"
+                    aria-label="Matching books already in the catalog"
+                    className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    {titleSuggestions.slice(0, 6).map((title) => (
+                      <button
+                        key={title.id}
+                        type="button"
+                        role="option"
+                        aria-selected="false"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => handleSelectExistingTitle(title)}
+                        className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-primary-50 focus:bg-primary-50 focus:outline-none dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                      >
+                        <span className="relative flex h-12 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                          <BookOpen className="absolute h-3.5 w-3.5" aria-hidden="true" />
+                          {title.cover_url && (
+                            <img
+                              src={title.cover_url}
+                              alt=""
+                              loading="lazy"
+                              className="absolute inset-0 h-full w-full object-cover"
+                              onError={(event) => { event.currentTarget.style.display = 'none' }}
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{title.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-slate-500">{title.publisher || 'Publisher unavailable'} · {title.subject?.name || 'Subject unavailable'} · Grade {title.grade_level || '—'}</span>
+                        </span>
+                        <span className="shrink-0 text-[11px] font-medium text-slate-500">{title.available_copies_count ?? 0} available</span>
+                      </button>
+                    ))}
+                    {isSearchingTitles && <p className="px-3 py-2 text-xs text-slate-500">Searching your catalog…</p>}
+                    {!isSearchingTitles && titleSuggestions.length === 0 && (
+                      <div className="px-3 py-2">
+                        <p className="text-xs text-slate-600 dark:text-slate-300">No matching title yet. Use AI to suggest the subject, grade and book type from what you’ve entered.</p>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => { setShowTitleSuggestions(false); void handleAiSuggest() }}
+                          className="mt-2 text-xs font-semibold text-primary hover:underline"
+                        >
+                          Help complete this title with AI
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {existingTitleSelected && (
+                  <p className="mt-1 text-xs font-medium text-primary-700 dark:text-primary-300">Existing catalog title selected. Add a barcode below to register another copy.</p>
+                )}
+              </div>
 
               <Input
                 label="Author(s)"
