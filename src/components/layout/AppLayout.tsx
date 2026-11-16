@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   BookOpen,
-  Users,
   UserPlus,
   Clock,
   ArrowRightCircle,
   ArrowLeftCircle,
   AlertTriangle,
-  Bell,
 } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { MobileNav } from './MobileNav'
 import { TopBar } from './TopBar'
 import { CommandPalette } from './CommandPalette'
 import {
@@ -19,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogBody,
   DialogFooter,
 } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
@@ -58,20 +56,6 @@ export const AppLayout: React.FC = () => {
           { label: 'Add', to: '/borrowers?new=1', icon: UserPlus },
         ]
       : []),
-  ]
-
-  const mobileDrawerItems = [
-    { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-    { label: 'Returns', to: '/returns', icon: Clock },
-    { label: 'Notifications', to: '/notifications', icon: Bell },
-    { label: 'Catalog', to: '/catalog', icon: BookOpen },
-    ...(isLibrarian
-      ? [
-          { label: 'Borrowers', to: '/borrowers', icon: Users },
-          { label: 'Issue Desk', to: '/issue', icon: ArrowRightCircle },
-          { label: 'Return Desk', to: '/return', icon: ArrowLeftCircle },
-        ]
-      : [{ label: 'My Loans', to: '/teacher', icon: BookOpen }]),
   ]
 
   return (
@@ -122,42 +106,10 @@ export const AppLayout: React.FC = () => {
         </nav>
       </div>
 
-      <Dialog
+      <MobileNav
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
-        maxWidth="sm"
-      >
-        <DialogHeader>
-          <DialogTitle>Library navigation</DialogTitle>
-          <DialogDescription>Open a workspace or add a new learner.</DialogDescription>
-        </DialogHeader>
-        <DialogBody className="space-y-1">
-          {mobileDrawerItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                <Icon className="h-4 w-4 text-slate-400" />
-                {item.label}
-              </NavLink>
-            )
-          })}
-          {isLibrarian && (
-            <Link
-              to="/borrowers?new=1"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-button bg-primary-50 px-3 py-2.5 text-sm font-semibold text-primary-800 hover:bg-primary-100 dark:bg-primary-950 dark:text-primary-200 dark:hover:bg-primary-900"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add learner
-            </Link>
-          )}
-        </DialogBody>
-      </Dialog>
+      />
 
       {/* Command Palette */}
       <CommandPalette
