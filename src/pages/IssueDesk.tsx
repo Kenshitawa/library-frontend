@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   Barcode,
   Search,
@@ -10,9 +12,10 @@ import {
   ArrowRightCircle,
   Trash2,
   Calendar,
-  Clock,
   Download,
   Printer,
+  History,
+  Loader2,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -20,7 +23,6 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Select } from '@/components/ui/Select'
 import { useAuth } from '@/hooks/useAuth'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateIssue } from '@/hooks/useIssues'
 import { supabase } from '@/lib/supabase'
 import type { Borrower, Copy, Title, BorrowerType } from '@/types'
@@ -59,6 +61,13 @@ function playSound(type: 'success' | 'error') {
   }
 }
 
+function authorNames(title: any): string {
+  return (title?.title_authors || [])
+    .map((link: any) => link?.author?.name)
+    .filter((name: string | null | undefined): name is string => !!name)
+    .join(', ')
+}
+
 interface ScannedBookSessionItem {
   copy: Copy & { title?: Title | null }
   dueAt: string
@@ -69,27 +78,49 @@ interface ScannedBookSessionItem {
   issue?: Issue
 }
 
+interface RecentIssue {
+  id: string
+  issued_at: string
+  due_at: string
+  status: string
+  borrower: { name: string; borrower_no: string; class?: { name: string } | null } | null
+  copy: { barcode: string; title?: { title: string } | null } | null
+}
+
+type DeskSuggestion =
+  | { key: string; kind: 'borrower'; label: string; detail: string; borrower: any }
+  | {
+      key: string
+      kind: 'title'
+      label: string
+      detail: string
+      available: number
+      disabled: boolean
+      title: any
+    }
+  | { key: string; kind: 'copy'; label: string; detail: string; copy: any }
+
+function recentIssueBadge(status: string, dueAt: string) {
+  if (status === 'returned') return { label: 'Returned', variant: 'success' as const }
+  if (status === 'lost') return { label: 'Lost', variant: 'danger' as const }
+  if (new Date(dueAt).getTime() < Date.now()) return { label: 'Overdue', variant: 'danger' as const }
+  return { label: 'On loan', variant: 'info' as const }
+}
+
 export const IssueDesk: React.FC = () => {
   const { user, profile } = useAuth()
   const { profile: libraryProfile } = useLibraryProfile()
   const createIssue = useCreateIssue()
   const queryClient = useQueryClient()
   const scanInputRef = useRef<HTMLInputElement>(null)
-  const { data: recentIssued = [] } = useQuery({
-    queryKey: ['recent-circulation', 'issued'],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('issues')
-        .select('id, issued_at, borrower:borrowers(id, name, borrower_no, class:classes(name)), copy:copies(title:titles(title))')
-        .order('issued_at', { ascending: false })
-        .limit(3)
-      if (error) throw new Error(error.message)
-      return data || []
-    },
-    staleTime: 30_000,
-  })
+  const searchTimerRef = useRef<number | null>(null)
+  const sessionResetTimerRef = useRef<number | null>(null)
 
   const [scanQuery, setScanQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<DeskSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [activeSuggestion, setActiveSuggestion] = useState(-1)
+  const [isSearching, setIsSearching] = useState(false)
   const [selectedBorrower, setSelectedBorrower] = useState<{
     borrower: Borrower
     borrowerType: BorrowerType
@@ -99,10 +130,27 @@ export const IssueDesk: React.FC = () => {
   } | null>(null)
 
   const [sessionBooks, setSessionBooks] = useState<ScannedBookSessionItem[]>([])
-  const [deskMessage, setDeskMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
+  const [deskMessage, setDeskMessage] = useState<{ type: 'error'; text: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [defaultLoanDays, setDefaultLoanDays] = useState(14)
-  const [matchingTitles, setMatchingTitles] = useState<Array<{ id: string; title: string; subject?: string; grade_level?: string }>>([])
+
+  const { data: recentIssues = [] } = useQuery({
+    queryKey: ['recent-issues'],
+    queryFn: async (): Promise<RecentIssue[]> => {
+      const { data, error } = await (supabase as any)
+        .from('issues')
+        .select(`
+          id, issued_at, due_at, status,
+          borrower:borrowers(name, borrower_no, class:classes(name)),
+          copy:copies(barcode, title:titles(title))
+        `)
+        .order('issued_at', { ascending: false })
+        .limit(8)
+
+      if (error) throw new Error(error.message)
+      return (data || []) as RecentIssue[]
+    },
+  })
 
   // Keep scan input focused
   useEffect(() => {
@@ -110,25 +158,132 @@ export const IssueDesk: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (!selectedBorrower || scanQuery.trim().length < 2) {
-      setMatchingTitles([])
+    return () => {
+      if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current)
+      if (sessionResetTimerRef.current) window.clearTimeout(sessionResetTimerRef.current)
+    }
+  }, [])
+
+  // Type-ahead: learners, titles/authors/publishers and exact copies.
+  useEffect(() => {
+    const rawQuery = scanQuery.trim()
+    if (rawQuery.length < 2) {
+      setSuggestions([])
+      setIsSearching(false)
       return
     }
-    const timer = window.setTimeout(async () => {
-      const { data } = await (supabase as any)
-        .from('titles')
-        .select('id, title, subject:subjects(name), grade_level')
-        .ilike('title', `%${scanQuery.trim()}%`)
-        .limit(8)
-      setMatchingTitles((data || []).map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        subject: row.subject?.name,
-        grade_level: row.grade_level,
-      })))
+
+    const query = rawQuery.replace(/[,%()]/g, ' ').trim()
+    if (!query) return
+
+    let alive = true
+    if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current)
+
+    searchTimerRef.current = window.setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const pattern = `%${query}%`
+        const [borrowersRes, copiesRes, authorsRes] = await Promise.all([
+          (supabase as any)
+            .from('borrowers')
+            .select('*, class:classes(name), borrower_type:borrower_types(*)')
+            .is('deleted_at', null)
+            .or(`name.ilike.${pattern},borrower_no.ilike.${pattern}`)
+            .limit(4),
+          (supabase as any)
+            .from('copies')
+            .select('*, title:titles(*, title_authors(author:authors(name)))')
+            .is('deleted_at', null)
+            .ilike('barcode', pattern)
+            .limit(3),
+          (supabase as any)
+            .from('authors')
+            .select('id')
+            .is('deleted_at', null)
+            .ilike('name', pattern)
+            .limit(20),
+        ])
+
+        let authorTitleIds: string[] = []
+        if (authorsRes.data?.length) {
+          const { data: links } = await (supabase as any)
+            .from('title_authors')
+            .select('title_id')
+            .in('author_id', authorsRes.data.map((author: { id: string }) => author.id))
+            .limit(200)
+          authorTitleIds = Array.from(
+            new Set<string>((links || []).map((link: { title_id: string }) => link.title_id))
+          )
+        }
+
+        const titleFilters = [
+          `title.ilike.${pattern}`,
+          `subtitle.ilike.${pattern}`,
+          `publisher.ilike.${pattern}`,
+          `isbn13.ilike.${pattern}`,
+          `isbn10.ilike.${pattern}`,
+        ]
+        if (authorTitleIds.length) {
+          titleFilters.push(`id.in.(${authorTitleIds.join(',')})`)
+        }
+
+        const { data: titlesData } = await (supabase as any)
+          .from('titles')
+          .select('*, copies(*), title_authors(author:authors(name))')
+          .is('deleted_at', null)
+          .or(titleFilters.join(','))
+          .order('title')
+          .limit(5)
+
+        if (!alive) return
+
+        const borrowerSuggestions: DeskSuggestion[] = (borrowersRes.data || []).map((borrower: any) => ({
+          key: `borrower-${borrower.id}`,
+          kind: 'borrower',
+          label: borrower.name,
+          detail: [borrower.borrower_no, borrower.class?.name].filter(Boolean).join(' · '),
+          borrower,
+        }))
+
+        const copySuggestions: DeskSuggestion[] = (copiesRes.data || []).map((copy: any) => ({
+          key: `copy-${copy.id}`,
+          kind: 'copy',
+          label: copy.title?.title || 'Unknown title',
+          detail: `Barcode ${copy.barcode}${
+            authorNames(copy.title) ? ` · ${authorNames(copy.title)}` : ''
+          }`,
+          copy,
+        }))
+
+        const titleSuggestions: DeskSuggestion[] = (titlesData || []).map((title: any) => {
+          const available = (title.copies || []).filter((copy: any) => copy.status === 'available').length
+          const author = authorNames(title)
+          return {
+            key: `title-${title.id}`,
+            kind: 'title',
+            label: title.title,
+            detail: [author || 'Unknown author', title.publisher].filter(Boolean).join(' · '),
+            available,
+            disabled: available === 0,
+            title,
+          }
+        })
+
+        setSuggestions(
+          [...borrowerSuggestions, ...copySuggestions, ...titleSuggestions].slice(0, 10)
+        )
+      } catch (err) {
+        if (alive) setSuggestions([])
+      } finally {
+        if (alive) setIsSearching(false)
+      }
     }, 180)
-    return () => window.clearTimeout(timer)
-  }, [scanQuery, selectedBorrower])
+
+    return () => {
+      alive = false
+      if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current)
+    }
+  }, [scanQuery])
 
   // Auto calculate due date
   const calculateDueDate = (days: number) => {
@@ -137,14 +292,179 @@ export const IssueDesk: React.FC = () => {
     return d.toISOString()
   }
 
+  const cancelSessionReset = () => {
+    if (sessionResetTimerRef.current) {
+      window.clearTimeout(sessionResetTimerRef.current)
+      sessionResetTimerRef.current = null
+    }
+  }
+
+  const scheduleSessionReset = (delay = 9000) => {
+    cancelSessionReset()
+    sessionResetTimerRef.current = window.setTimeout(() => {
+      setSelectedBorrower(null)
+      setSessionBooks([])
+      setDeskMessage(null)
+      setScanQuery('')
+      scanInputRef.current?.focus()
+    }, delay)
+  }
+
+  const closeSuggestions = () => {
+    setShowSuggestions(false)
+    setActiveSuggestion(-1)
+  }
+
+  const selectBorrowerFromRecord = async (borrower: any) => {
+    cancelSessionReset()
+    setDeskMessage(null)
+    setScanQuery('')
+    closeSuggestions()
+
+    try {
+      const [issuesRes, chargesRes] = await Promise.all([
+        (supabase as any)
+          .from('issues')
+          .select('*')
+          .eq('borrower_id', borrower.id)
+          .eq('status', 'open'),
+        (supabase as any)
+          .from('charges')
+          .select('*')
+          .eq('borrower_id', borrower.id)
+          .in('status', ['open', 'partial', 'pending']),
+      ])
+
+      const openIssues = (issuesRes.data || []) as any[]
+      const hasOverdue = openIssues.some((issue) => new Date(issue.due_at) < new Date())
+      const totalCharges = (chargesRes.data || []).reduce(
+        (sum: number, charge: any) => sum + (charge.amount - (charge.paid_amount || 0)),
+        0
+      )
+
+      const borrowerType: BorrowerType = borrower.borrower_type || {
+        max_items: 3,
+        charge_threshold: 0,
+        return_days: 14,
+        name: 'Learner',
+      }
+
+      setSelectedBorrower({
+        borrower: borrower as Borrower,
+        borrowerType,
+        openIssuesCount: openIssues.length,
+        hasOverdue,
+        outstandingCharges: totalCharges,
+      })
+      if (borrowerType.return_days) setDefaultLoanDays(borrowerType.return_days)
+      playSound('success')
+      toast.success(`Borrower ready: ${borrower.name}`, { duration: 2500 })
+      scanInputRef.current?.focus()
+    } catch (err: any) {
+      setDeskMessage({
+        type: 'error',
+        text: err?.message || 'Could not load this borrower.',
+      })
+    }
+  }
+
+  const addCopyToSession = (copyData: any) => {
+    cancelSessionReset()
+    setDeskMessage(null)
+
+    if (!copyData) return
+    if (sessionBooks.some((item) => item.copy.id === copyData.id)) {
+      playSound('error')
+      setDeskMessage({
+        type: 'error',
+        text: `Book "${copyData.title?.title || copyData.barcode}" is already in this session.`,
+      })
+      setScanQuery('')
+      closeSuggestions()
+      return
+    }
+
+    let blocked = false
+    let blockReason = ''
+
+    if (selectedBorrower) {
+      const check = evaluateIssueBlocks({
+        borrower: selectedBorrower.borrower,
+        borrowerType: selectedBorrower.borrowerType,
+        copy: copyData,
+        openIssuesCount:
+          selectedBorrower.openIssuesCount +
+          sessionBooks.filter((item) => !item.blocked || item.override).length,
+        hasOverdue: selectedBorrower.hasOverdue,
+        outstandingCharges: selectedBorrower.outstandingCharges,
+      })
+      blocked = check.blocked
+      blockReason = check.reason
+    } else {
+      blocked = true
+      blockReason = 'Scan or select a borrower first.'
+    }
+
+    playSound(blocked ? 'error' : 'success')
+    setSessionBooks((prev) => [
+      ...prev,
+      {
+        copy: copyData,
+        dueAt: calculateDueDate(defaultLoanDays),
+        blocked,
+        blockReason,
+      },
+    ])
+    setScanQuery('')
+    closeSuggestions()
+    scanInputRef.current?.focus()
+  }
+
+  const chooseSuggestion = async (suggestion: DeskSuggestion) => {
+    if (suggestion.kind === 'borrower') {
+      await selectBorrowerFromRecord(suggestion.borrower)
+      return
+    }
+
+    if (suggestion.kind === 'copy') {
+      addCopyToSession(suggestion.copy)
+      return
+    }
+
+    if (suggestion.kind === 'title') {
+      if (suggestion.disabled) {
+        playSound('error')
+        setDeskMessage({
+          type: 'error',
+          text: `No copies of "${suggestion.label}" are currently on the shelf.`,
+        })
+        return
+      }
+      const availableCopy = (suggestion.title.copies || []).find(
+        (copy: any) => copy.status === 'available'
+      )
+      if (!availableCopy) {
+        playSound('error')
+        setDeskMessage({
+          type: 'error',
+          text: `No copies of "${suggestion.label}" are currently on the shelf.`,
+        })
+        return
+      }
+      addCopyToSession({ ...availableCopy, title: suggestion.title })
+    }
+  }
+
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const query = scanQuery.trim()
     if (!query) return
+    cancelSessionReset()
     setDeskMessage(null)
+    closeSuggestions()
 
     try {
-      // 1. If no borrower selected, check if barcode belongs to a borrower (learner card or admission number)
+      // 1. If no borrower selected, check if the query belongs to a borrower
       if (!selectedBorrower) {
         const { data: borrower } = await (supabase as any)
           .from('borrowers')
@@ -153,142 +473,44 @@ export const IssueDesk: React.FC = () => {
             borrower_type:borrower_types(*),
             class:classes(*)
           `)
+          .is('deleted_at', null)
           .or(`borrower_no.eq.${query},name.ilike.%${query}%`)
           .limit(1)
           .maybeSingle()
 
         if (borrower) {
-          // Fetch open issues count & charges
-          const [issuesRes, chargesRes] = await Promise.all([
-            (supabase as any)
-              .from('issues')
-              .select('*')
-              .eq('borrower_id', borrower.id)
-              .eq('status', 'open'),
-            (supabase as any)
-              .from('charges')
-              .select('*')
-              .eq('borrower_id', borrower.id)
-              .in('status', ['open', 'partial', 'pending']),
-          ])
-
-          const openIssues = (issuesRes.data || []) as any[]
-          const hasOverdue = openIssues.some((i) => new Date(i.due_at) < new Date())
-          const totalCharges = (chargesRes.data || []).reduce(
-            (sum: number, c: any) => sum + (c.amount - (c.paid_amount || 0)),
-            0
-          )
-
-          const bType: BorrowerType = (borrower as any).borrower_type || {
-            max_items: 3,
-            charge_threshold: 0,
-            return_days: 14,
-            name: 'Learner',
-          }
-
-          setSelectedBorrower({
-            borrower: borrower as Borrower,
-            borrowerType: bType,
-            openIssuesCount: openIssues.length,
-            hasOverdue,
-            outstandingCharges: totalCharges,
-          })
-
-          if (bType.return_days) setDefaultLoanDays(bType.return_days)
-          playSound('success')
-          setDeskMessage({ type: 'success', text: `Borrower selected: ${borrower.name}` })
-          setScanQuery('')
+          await selectBorrowerFromRecord(borrower)
           return
         }
       }
 
-      // 2. Resolve a scanned barcode first, then let staff type a title when
-      // the barcode is missing. Keep the barcode path exact for scanners.
-      let { data: copyData } = await (supabase as any)
+      // 2. Otherwise scan the exact book barcode
+      const { data: copyData } = await (supabase as any)
         .from('copies')
         .select(`
           *,
-          title:titles(*)
+          title:titles(*, title_authors(author:authors(name)))
         `)
         .eq('barcode', query)
         .maybeSingle()
 
-      let matchedBookTitle = false
-      if (!copyData && selectedBorrower) {
-        const { data: titles } = await (supabase as any)
-          .from('titles')
-          .select('id, title')
-          .ilike('title', `%${query}%`)
-          .limit(5)
-
-        matchedBookTitle = Boolean(titles?.length)
-        const titleIds = (titles || []).map((title: any) => title.id)
-        if (titleIds.length) {
-          const { data: availableCopy } = await (supabase as any)
-            .from('copies')
-            .select(`*, title:titles(*)`)
-            .in('title_id', titleIds)
-            .eq('status', 'available')
-            .limit(1)
-            .maybeSingle()
-          copyData = availableCopy
-        }
-      }
-
-      if (!copyData) {
-        playSound('error')
-        setDeskMessage({
-          type: 'error',
-          text: matchedBookTitle ? `No available copies found for "${query}".` : `Barcode or book title "${query}" not found in library inventory.`,
-        })
-        setScanQuery('')
+      if (copyData) {
+        addCopyToSession(copyData)
         return
       }
 
-      // Check if already in current session
-      if (sessionBooks.some((item) => item.copy.id === (copyData as any).id)) {
-        playSound('error')
-        setDeskMessage({ type: 'error', text: `Book "${(copyData as any).title?.title}" is already in this session.` })
-        setScanQuery('')
+      // 3. Fall back to the first title match so typing a book name works.
+      const firstMatch = suggestions.find((suggestion) => !('disabled' in suggestion && suggestion.disabled))
+      if (firstMatch) {
+        await chooseSuggestion(firstMatch)
         return
       }
 
-      // Evaluate issue blocking conditions if borrower is chosen
-      let blocked = false
-      let blockReason = ''
-
-      if (selectedBorrower) {
-        const check = evaluateIssueBlocks({
-          borrower: selectedBorrower.borrower,
-          borrowerType: selectedBorrower.borrowerType,
-          copy: copyData as any,
-          openIssuesCount: selectedBorrower.openIssuesCount + sessionBooks.filter((s) => !s.blocked || s.override).length,
-          hasOverdue: selectedBorrower.hasOverdue,
-          outstandingCharges: selectedBorrower.outstandingCharges,
-        })
-        blocked = check.blocked
-        blockReason = check.reason
-      } else {
-        blocked = true
-        blockReason = 'Scan or select a borrower first.'
-      }
-
-      if (blocked) {
-        playSound('error')
-      } else {
-        playSound('success')
-      }
-
-      setSessionBooks((prev) => [
-        ...prev,
-        {
-          copy: copyData as any,
-          dueAt: calculateDueDate(defaultLoanDays),
-          blocked,
-          blockReason,
-        },
-      ])
-
+      playSound('error')
+      setDeskMessage({
+        type: 'error',
+        text: `No learner, barcode or title matched "${query}".`,
+      })
       setScanQuery('')
     } catch (err: any) {
       playSound('error')
@@ -302,6 +524,7 @@ export const IssueDesk: React.FC = () => {
   const handleConfirmIssueSession = async () => {
     if (!selectedBorrower) return
     setIsProcessing(true)
+    cancelSessionReset()
 
     const itemsToIssue = sessionBooks.filter((b) => (!b.blocked || b.override) && !b.issued)
     if (itemsToIssue.length === 0) {
@@ -321,7 +544,6 @@ export const IssueDesk: React.FC = () => {
           overrideReason: item.override ? 'Librarian desk override' : undefined,
         })
         issuedCount += 1
-        scheduleIssueReceiptDownload({ ...item, issued: true, issue })
         setSessionBooks((prev) =>
           prev.map((book) =>
             book.copy.id === item.copy.id ? { ...book, issued: true, issue } : book
@@ -329,18 +551,34 @@ export const IssueDesk: React.FC = () => {
         )
       }
 
-      playSound('success')
-      await queryClient.invalidateQueries({ queryKey: ['recent-circulation', 'issued'] })
-      setDeskMessage({
-        type: 'success',
-        text: `Successfully issued ${itemsToIssue.length} book(s) to ${selectedBorrower.borrower.name}!`,
-      })
+      setSelectedBorrower((prev) =>
+        prev
+          ? {
+              ...prev,
+              openIssuesCount: prev.openIssuesCount + itemsToIssue.length,
+            }
+          : prev
+      )
 
+      playSound('success')
+      toast.success(
+        `Issued ${itemsToIssue.length} ${itemsToIssue.length === 1 ? 'book' : 'books'} to ${
+          selectedBorrower.borrower.name
+        }.`,
+        {
+          duration: 6000,
+          description: 'This session will clear automatically in a few seconds.',
+        }
+      )
+      queryClient.invalidateQueries({ queryKey: ['recent-issues'] })
+      // Let the notification leave first, then reset the desk for the next learner.
+      scheduleSessionReset(9000)
     } catch (err: any) {
       playSound('error')
-      const partialMessage = issuedCount > 0
-        ? ` ${issuedCount} book(s) were issued successfully; check the marked items before retrying.`
-        : ''
+      const partialMessage =
+        issuedCount > 0
+          ? ` ${issuedCount} book(s) were issued successfully; check the marked items before retrying.`
+          : ''
       setDeskMessage({
         type: 'error',
         text: `${err?.message || 'Failed to complete issue.'}${partialMessage}`,
@@ -380,19 +618,13 @@ export const IssueDesk: React.FC = () => {
     }
   }
 
-  const scheduleIssueReceiptDownload = (item: ScannedBookSessionItem) => {
-    // Let the issue confirmation paint before jsPDF builds the receipt on the
-    // main thread. This keeps receipt creation from extending the button's INP.
-    window.requestAnimationFrame(() => {
-      window.setTimeout(() => handleReceipt(item, 'download'), 0)
-    })
-  }
-
   const handleClearSession = () => {
+    cancelSessionReset()
     setSelectedBorrower(null)
     setSessionBooks([])
     setDeskMessage(null)
     setScanQuery('')
+    closeSuggestions()
     scanInputRef.current?.focus()
   }
 
@@ -407,16 +639,43 @@ export const IssueDesk: React.FC = () => {
     )
   }
 
+  const handleScanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setShowSuggestions(true)
+      setActiveSuggestion((prev) => Math.min(prev + 1, suggestions.length - 1))
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveSuggestion((prev) => Math.max(prev - 1, 0))
+      return
+    }
+    if (e.key === 'Escape') {
+      closeSuggestions()
+      return
+    }
+    if (
+      e.key === 'Enter' &&
+      showSuggestions &&
+      activeSuggestion >= 0 &&
+      suggestions[activeSuggestion]
+    ) {
+      e.preventDefault()
+      void chooseSuggestion(suggestions[activeSuggestion])
+    }
+  }
+
+  const suggestionOpen = showSuggestions && scanQuery.trim().length >= 2
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
-            Issue Desk
-          </h2>
-          <p className="text-xs text-slate-500">
-            Scan learner ID card or admission number, then scan textbook barcodes
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">Issue Desk</h2>
+          <p className="text-xs text-faint">
+            Scan a learner card or barcode, or type a learner, title, author or publisher.
           </p>
         </div>
 
@@ -438,19 +697,90 @@ export const IssueDesk: React.FC = () => {
           <form onSubmit={handleScanSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <input
-                list={selectedBorrower ? 'issue-book-title-suggestions' : undefined}
                 ref={scanInputRef}
                 type="text"
                 value={scanQuery}
-                onChange={(e) => setScanQuery(e.target.value)}
-                placeholder={selectedBorrower ? 'Scan barcode or type a book title…' : 'Scan learner card or enter admission number…'}
-                className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-slate-50 dark:bg-slate-900 px-4 py-3 pl-12 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+                onChange={(e) => {
+                  setScanQuery(e.target.value)
+                  setShowSuggestions(true)
+                  setActiveSuggestion(-1)
+                }}
+                onFocus={() => {
+                  if (scanQuery.trim().length >= 2) setShowSuggestions(true)
+                }}
+                onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+                onKeyDown={handleScanKeyDown}
+                placeholder="Scan barcode or type learner / book / author..."
+                className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-surface-1 px-4 py-3 pl-12 text-heading placeholder:text-muted focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
                 autoComplete="off"
+                role="combobox"
+                aria-expanded={suggestionOpen}
+                aria-autocomplete="list"
               />
-              {selectedBorrower && <datalist id="issue-book-title-suggestions">
-                {matchingTitles.map((title) => <option key={title.id} value={title.title} label={[title.subject, title.grade_level].filter(Boolean).join(' · ')} />)}
-              </datalist>}
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary pointer-events-none" />
+              <Search className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted pointer-events-none" />
+
+              {suggestionOpen && (
+                <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-xl border border-line bg-panel text-left shadow-[0_22px_60px_-30px_rgba(0,0,0,0.8)]">
+                  {isSearching ? (
+                    <div className="flex items-center gap-2 p-3 text-xs text-muted">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Searching learners, titles and authors…
+                    </div>
+                  ) : suggestions.length === 0 ? (
+                    <div className="p-3 text-xs text-muted">
+                      No matches. Press Enter to scan the exact barcode.
+                    </div>
+                  ) : (
+                    <ul className="max-h-80 overflow-y-auto p-1">
+                      {suggestions.map((suggestion, index) => {
+                        const disabled =
+                          'disabled' in suggestion ? suggestion.disabled : false
+                        const Icon =
+                          suggestion.kind === 'borrower'
+                            ? User
+                            : suggestion.kind === 'copy'
+                            ? Barcode
+                            : BookOpen
+                        return (
+                          <li key={suggestion.key}>
+                            <button
+                              type="button"
+                              disabled={disabled}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => void chooseSuggestion(suggestion)}
+                              className={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                                activeSuggestion === index ? 'bg-surface-2' : 'hover:bg-surface-2'
+                              } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                            >
+                              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line bg-surface-1 text-muted">
+                                <Icon className="h-3.5 w-3.5" />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium text-heading">
+                                  {suggestion.label}
+                                </span>
+                                <span className="block truncate text-[11px] text-muted">
+                                  {suggestion.detail || '—'}
+                                </span>
+                              </span>
+                              <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-faint">
+                                {suggestion.kind === 'borrower'
+                                  ? 'Learner'
+                                  : suggestion.kind === 'copy'
+                                  ? 'Copy'
+                                  : suggestion.available > 0
+                                  ? `${suggestion.available} on shelf`
+                                  : 'None on shelf'}
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
             <Button type="submit" variant="primary" className="px-6 text-base">
               Scan
@@ -459,37 +789,13 @@ export const IssueDesk: React.FC = () => {
 
           {deskMessage && (
             <div
-              className={`mt-3 flex items-center gap-2 rounded-md p-3 text-xs font-semibold ${
-                deskMessage.type === 'success'
-                  ? 'bg-success-50 text-success-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                  : deskMessage.type === 'error'
-                  ? 'bg-danger-50 text-danger dark:bg-red-950/60 dark:text-red-300'
-                  : 'bg-info-50 text-info dark:bg-blue-950/60 dark:text-blue-300'
-              }`}
+              className="mt-3 flex items-center gap-2 rounded-md p-3 text-xs font-semibold bg-danger-50 text-danger dark:bg-red-950/60 dark:text-red-300"
+              role="alert"
             >
-              {deskMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 shrink-0" />
-              ) : (
-                <AlertCircle className="h-4 w-4 shrink-0" />
-              )}
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{deskMessage.text}</span>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><CardTitle className="text-sm">Latest book issues</CardTitle></div>
-          <span className="text-xs text-slate-500">Last 3</span>
-        </CardHeader>
-        <CardContent className="grid gap-2 p-3 sm:grid-cols-3">
-          {recentIssued.length ? recentIssued.map((issue: any) => (
-            <div key={issue.id} className="min-w-0 rounded-xl border border-slate-200/80 bg-white/60 p-3 dark:border-slate-700 dark:bg-slate-900/30">
-              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{issue.borrower?.name || 'Borrower'}</p>
-              <p className="mt-1 truncate text-xs text-slate-500">{issue.copy?.title?.title || 'Book title'} · {issue.borrower?.borrower_no || ''}</p>
-            </div>
-          )) : <p className="px-2 py-3 text-sm text-slate-500 sm:col-span-3">No books issued yet.</p>}
         </CardContent>
       </Card>
 
@@ -512,10 +818,10 @@ export const IssueDesk: React.FC = () => {
                       {selectedBorrower.borrower.name.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-base">
+                      <h4 className="font-bold text-heading text-base">
                         {selectedBorrower.borrower.name}
                       </h4>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-2 text-xs text-faint">
                         <span className="font-mono">{selectedBorrower.borrower.borrower_no}</span>
                         <span>•</span>
                         <Badge variant="info" size="sm">
@@ -526,16 +832,16 @@ export const IssueDesk: React.FC = () => {
                   </div>
 
                   {/* Status indicators */}
-                  <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <div className="space-y-2 pt-2 border-t border-line text-xs">
                     <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Open Loans:</span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="text-faint">Open Loans:</span>
+                      <span className="font-semibold text-heading">
                         {selectedBorrower.openIssuesCount} / {selectedBorrower.borrowerType.max_items} max
                       </span>
                     </div>
 
                     <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Overdue Status:</span>
+                      <span className="text-faint">Overdue Status:</span>
                       {selectedBorrower.hasOverdue ? (
                         <Badge variant="danger" size="sm">
                           Has Overdue Items
@@ -548,12 +854,12 @@ export const IssueDesk: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Outstanding Charges:</span>
+                      <span className="text-faint">Outstanding Charges:</span>
                       <span
                         className={`font-semibold ${
                           selectedBorrower.outstandingCharges > 0
                             ? 'text-danger'
-                            : 'text-slate-900 dark:text-slate-100'
+                            : 'text-heading'
                         }`}
                       >
                         {formatCurrency(selectedBorrower.outstandingCharges)}
@@ -562,10 +868,8 @@ export const IssueDesk: React.FC = () => {
                   </div>
 
                   {/* Loan Duration Selector */}
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Loan Duration
-                    </label>
+                  <div className="pt-2 border-t border-line">
+                    <label className="text-xs font-medium text-body">Loan Duration</label>
                     <Select
                       options={[
                         { value: '14', label: '14 Days (Standard Library)' },
@@ -580,9 +884,9 @@ export const IssueDesk: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center text-xs text-slate-400">
+                <div className="p-8 text-center text-xs text-muted">
                   <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Scan borrower's card or enter admission number to begin.
+                  Scan a learner's card or type their name to begin.
                 </div>
               )}
             </CardContent>
@@ -613,97 +917,191 @@ export const IssueDesk: React.FC = () => {
 
             <CardContent className="flex-1 p-0">
               {sessionBooks.length === 0 ? (
-                <div className="p-12 text-center text-xs text-slate-400">
+                <div className="p-12 text-center text-xs text-muted">
                   No books scanned yet in this session.
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {sessionBooks.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-center justify-between p-4 transition-colors ${
-                        item.issued
-                          ? 'bg-success-50/40 dark:bg-emerald-950/20'
-                          : item.blocked && !item.override
-                          ? 'bg-danger-50/40 dark:bg-red-950/20'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 pr-3">
-                        <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
-                          {item.copy.title?.title || 'Unknown Title'}
-                        </span>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                          <span className="font-mono">#{item.copy.barcode}</span>
-                          <span>•</span>
-                          <span>Due: {formatDate(item.dueAt)}</span>
-                        </div>
-
-                        {item.blocked && !item.issued && (
-                          <div className="mt-1 flex items-center gap-2 text-[11px] text-danger font-medium">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            <span>{item.blockReason}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {item.issued ? (
-                          <>
-                            <Badge variant="success" size="sm">Issued ✓</Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              aria-label={`Print receipt for ${item.copy.title?.title || item.copy.barcode}`}
-                              onClick={() => handleReceipt(item, 'print')}
-                            >
-                              <Printer className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              aria-label={`Download receipt for ${item.copy.title?.title || item.copy.barcode}`}
-                              onClick={() => handleReceipt(item, 'download')}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        ) : item.blocked ? (
-                          <Button
-                            variant={item.override ? 'success' : 'outline'}
-                            size="sm"
-                            className="text-xs h-7 px-2"
-                            onClick={() => handleToggleOverride(idx)}
-                          >
-                            {item.override ? 'Overridden ✓' : 'Override Block'}
-                          </Button>
-                        ) : (
-                          <Badge variant="info" size="sm">
-                            Ready
-                          </Badge>
-                        )}
-
-                        {!item.issued && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-danger"
-                            onClick={() => handleRemoveBook(idx)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left text-xs">
+                    <thead>
+                      <tr className="border-y border-line bg-surface-1 text-[10px] uppercase tracking-[0.12em] text-faint">
+                        <th className="px-4 py-2.5 font-semibold">Book</th>
+                        <th className="px-4 py-2.5 font-semibold">Barcode</th>
+                        <th className="px-4 py-2.5 font-semibold">Due</th>
+                        <th className="px-4 py-2.5 font-semibold">Status</th>
+                        <th className="px-4 py-2.5 text-right font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {sessionBooks.map((item, idx) => (
+                        <tr
+                          key={item.copy.id || idx}
+                          className={
+                            item.issued
+                              ? 'bg-success/5'
+                              : item.blocked && !item.override
+                              ? 'bg-danger/5'
+                              : 'hover:bg-surface-2'
+                          }
+                        >
+                          <td className="max-w-[220px] px-4 py-3">
+                            <p className="truncate font-semibold text-heading">
+                              {item.copy.title?.title || 'Unknown Title'}
+                            </p>
+                            {item.blocked && !item.issued && (
+                              <p className="mt-1 flex items-start gap-1 text-[11px] font-medium text-danger">
+                                <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+                                <span>{item.blockReason}</span>
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-muted">{item.copy.barcode}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-muted">
+                            {formatDate(item.dueAt)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {item.issued ? (
+                              <Badge variant="success" size="sm">
+                                Issued
+                              </Badge>
+                            ) : item.blocked ? (
+                              <Badge variant={item.override ? 'warning' : 'danger'} size="sm">
+                                {item.override ? 'Override' : 'Blocked'}
+                              </Badge>
+                            ) : (
+                              <Badge variant="info" size="sm">
+                                Ready
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {item.issued && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0"
+                                    aria-label={`Print receipt for ${item.copy.title?.title || item.copy.barcode}`}
+                                    onClick={() => handleReceipt(item, 'print')}
+                                  >
+                                    <Printer className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0"
+                                    aria-label={`Download receipt for ${item.copy.title?.title || item.copy.barcode}`}
+                                    onClick={() => handleReceipt(item, 'download')}
+                                  >
+                                    <Download className="h-3.5 w-3.5" />
+                                  </Button>
+                                </>
+                              )}
+                              {item.blocked && !item.issued && (
+                                <Button
+                                  variant={item.override ? 'success' : 'outline'}
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => handleToggleOverride(idx)}
+                                >
+                                  {item.override ? 'Overridden ✓' : 'Override'}
+                                </Button>
+                              )}
+                              {!item.issued && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-muted hover:text-danger"
+                                  aria-label={`Remove ${item.copy.title?.title || item.copy.barcode} from session`}
+                                  onClick={() => handleRemoveBook(idx)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Recently borrowed — its own table so the desk keeps a clear audit trail */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" />
+            <CardTitle>Recently Borrowed</CardTitle>
+          </div>
+          <Badge variant="outline" size="sm">
+            Latest {recentIssues.length}
+          </Badge>
+        </CardHeader>
+        <CardContent className="p-0">
+          {recentIssues.length === 0 ? (
+            <div className="p-8 text-center text-xs text-muted">
+              No borrowing activity yet. Issued books will appear here.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-y border-line bg-surface-1 text-[10px] uppercase tracking-[0.12em] text-faint">
+                    <th className="px-4 py-2.5 font-semibold">Learner</th>
+                    <th className="px-4 py-2.5 font-semibold">Book</th>
+                    <th className="px-4 py-2.5 font-semibold">Barcode</th>
+                    <th className="px-4 py-2.5 font-semibold">Issued</th>
+                    <th className="px-4 py-2.5 font-semibold">Due</th>
+                    <th className="px-4 py-2.5 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {recentIssues.map((issue) => {
+                    const badge = recentIssueBadge(issue.status, issue.due_at)
+                    return (
+                      <tr key={issue.id} className="hover:bg-surface-2">
+                        <td className="px-4 py-2.5">
+                          <p className="font-medium text-heading">
+                            {issue.borrower?.name || 'Unknown learner'}
+                          </p>
+                          <p className="text-[11px] text-faint">
+                            {[issue.borrower?.borrower_no, issue.borrower?.class?.name]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                        </td>
+                        <td className="px-4 py-2.5 text-body">
+                          {issue.copy?.title?.title || '—'}
+                        </td>
+                        <td className="px-4 py-2.5 font-mono text-muted">
+                          {issue.copy?.barcode || '—'}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2.5 text-muted">
+                          {formatDate(issue.issued_at)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2.5 text-muted">
+                          {formatDate(issue.due_at)}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <Badge variant={badge.variant} size="sm">
+                            {badge.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

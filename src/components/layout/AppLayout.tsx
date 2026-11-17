@@ -59,7 +59,9 @@ export const AppLayout: React.FC = () => {
   ]
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors duration-150">
+    <div className="relative flex h-screen w-full overflow-hidden bg-abyss text-body">
+      <div className="pointer-events-none fixed inset-0 hub-grid" aria-hidden="true" />
+      <div className="pointer-events-none fixed inset-0 hub-ambient" aria-hidden="true" />
       {/* Desktop / Tablet Sidebar */}
       <Sidebar
         collapsed={collapsed}
@@ -73,14 +75,14 @@ export const AppLayout: React.FC = () => {
           onToggleMobileNav={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
         </main>
 
         {/* Mobile Bottom Navigation (< 768px) */}
-        <nav aria-label="Primary navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-[#b8d3c4] bg-[#d7e9dc]/95 px-1 backdrop-blur-sm dark:border-[#31584d] dark:bg-[#173c35]/95">
+        <nav aria-label="Primary navigation" className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-line bg-panel px-1 backdrop-blur-xl">
           {mobileNavItems.map((item) => {
             const Icon = item.icon
             return (
@@ -91,8 +93,8 @@ export const AppLayout: React.FC = () => {
                   cn(
                     'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1 text-[10px] font-medium transition-colors',
                     isActive
-                      ? 'text-primary dark:text-primary-400 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                      ? 'text-accent font-semibold'
+                      : 'text-faint hover:text-heading'
                   )
                 }
                 aria-label={item.label === 'Add' ? 'Add learner' : item.label}

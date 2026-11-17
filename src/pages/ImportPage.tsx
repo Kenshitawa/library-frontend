@@ -267,10 +267,10 @@ export const ImportPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             CSV Data Import
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Batch import school rosters, library titles, copies, and grade classes with automatic validation and error reporting
           </p>
         </div>
@@ -300,12 +300,12 @@ export const ImportPage: React.FC = () => {
       {/* Upload Dropzone */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-line-strong rounded-xl p-8 hover:bg-surface-1 transition-colors">
             <Upload className="h-10 w-10 text-primary mb-3" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <p className="text-sm font-semibold text-body mb-1">
               Select or drop your CSV file here
             </p>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-muted mb-4">
               Supported format: .csv (UTF-8 encoded)
             </p>
             <label className="cursor-pointer">
@@ -337,7 +337,7 @@ export const ImportPage: React.FC = () => {
               <h4 className="font-semibold text-success-800 dark:text-success-400">
                 Import Process Completed
               </h4>
-              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
+              <p className="text-xs text-body mt-1">
                 <strong>{commitSummary.imported}</strong> records were successfully imported. <strong>{commitSummary.skipped}</strong> records were skipped.
               </p>
               {commitSummary.duplicateErrors?.length > 0 && (
@@ -355,7 +355,7 @@ export const ImportPage: React.FC = () => {
       {/* Parsed Preview Table */}
       {parsedRows.length > 0 && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-line pb-3">
             <div>
               <CardTitle className="text-base font-bold">Import Data Preview</CardTitle>
               <CardDescription>
@@ -382,34 +382,34 @@ export const ImportPage: React.FC = () => {
             <div className="max-h-96 overflow-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 sticky top-0">
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 w-12 text-center">
+                  <tr className="border-b border-line bg-surface-1">
+                    <th className="p-3 font-semibold text-muted w-12 text-center">
                       #
                     </th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 w-24">
+                    <th className="p-3 font-semibold text-muted w-24">
                       Status
                     </th>
                     {Object.keys(parsedRows[0].data).map((key) => (
                       <th
                         key={key}
-                        className="p-3 font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
+                        className="p-3 font-semibold text-muted uppercase tracking-wider"
                       >
                         {key}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-line">
                   {parsedRows.map((row) => (
                     <tr
                       key={row.index}
                       className={
                         row.valid
-                          ? 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                          ? 'hover:bg-surface-2'
                           : 'bg-danger-50/40 dark:bg-danger-950/20'
                       }
                     >
-                      <td className="p-3 text-center text-slate-400 font-mono">
+                      <td className="p-3 text-center text-muted font-mono">
                         {row.index}
                       </td>
                       <td className="p-3">
@@ -423,7 +423,7 @@ export const ImportPage: React.FC = () => {
                         )}
                       </td>
                       {Object.keys(row.data).map((key) => (
-                        <td key={key} className="p-3 text-slate-800 dark:text-slate-200 font-mono text-[11px]">
+                        <td key={key} className="p-3 text-body font-mono text-[11px]">
                           {String(row.data[key] ?? '')}
                         </td>
                       ))}

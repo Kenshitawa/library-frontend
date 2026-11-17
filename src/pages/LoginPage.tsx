@@ -84,8 +84,8 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-0 dark:bg-slate-950 lg:p-5">
-      <main className="mx-auto grid min-h-screen max-w-7xl bg-white dark:bg-slate-950 lg:min-h-[calc(100vh-2.5rem)] lg:grid-cols-2 lg:overflow-hidden lg:rounded-2xl lg:shadow-2xl">
+    <div className="min-h-screen bg-abyss p-0 lg:p-5">
+      <main className="mx-auto grid min-h-screen max-w-7xl bg-panel lg:min-h-[calc(100vh-2.5rem)] lg:grid-cols-2 lg:overflow-hidden lg:rounded-2xl lg:shadow-2xl">
         <section className="flex items-center justify-center px-6 py-10 sm:px-12 lg:px-16">
           <div className="w-full max-w-sm">
             <div className="mb-7">
@@ -100,10 +100,10 @@ export const LoginPage: React.FC = () => {
                   <Library className="h-6 w-6" />
                 )}
               </div>
-              <h1 className="mt-5 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              <h1 className="mt-5 text-xl font-bold tracking-tight text-heading">
                 {libProfile?.name || 'School Library System'}
               </h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-sm text-muted">
                 Sign in to manage books, readers and returns.
               </p>
             </div>
@@ -161,7 +161,7 @@ export const LoginPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <p className="mt-5 text-center text-xs text-slate-400">
+            <p className="mt-5 text-center text-xs text-muted">
               Need an account? Contact your school librarian to receive an invitation.
             </p>
 
@@ -181,24 +181,24 @@ export const LoginPage: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden overflow-hidden bg-primary-950 px-12 py-14 text-white lg:flex lg:items-center xl:px-20">
+        <aside className="relative hidden overflow-hidden bg-primary-50 px-12 py-14 text-primary-900 dark:bg-primary-950 dark:text-white lg:flex lg:items-center xl:px-20">
           <div className="relative z-10 grid w-full grid-cols-[1fr_0.9fr] items-center gap-8">
             <div className="max-w-lg">
-              <BookOpen className="h-8 w-8 text-primary-200" strokeWidth={1.5} />
-              <p className="mt-8 text-sm font-medium text-primary-200">
+              <BookOpen className="h-8 w-8 text-primary-600 dark:text-primary-200" strokeWidth={1.5} />
+              <p className="mt-8 text-sm font-medium text-primary-700 dark:text-primary-200">
                 {libProfile?.name || 'Your school library'}
               </p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight xl:text-4xl" aria-live="polite">
                 {LOGIN_SLIDES[activeSlide].title}
               </h2>
-              <p className="mt-5 max-w-md text-sm leading-6 text-primary-100/80">
+              <p className="mt-5 max-w-md text-sm leading-6 text-primary-800/80 dark:text-primary-100/80">
                 {LOGIN_SLIDES[activeSlide].description}
               </p>
-              <div className="mt-10 border-l-2 border-primary-300 pl-4">
-                <p className="text-sm font-medium text-white">
+              <div className="mt-10 border-l-2 border-primary-400 pl-4 dark:border-primary-300">
+                <p className="text-sm font-medium text-primary-900 dark:text-white">
                   {LOGIN_SLIDES[activeSlide].note}
                 </p>
-                <p className="mt-1 text-xs text-primary-200">A reminder from your library team</p>
+                <p className="mt-1 text-xs text-primary-700 dark:text-primary-200">A reminder from your library team</p>
               </div>
               <div className="mt-8 flex items-center gap-2" aria-label="Login image selection">
                 {LOGIN_SLIDES.map((slide, index) => (
@@ -208,8 +208,10 @@ export const LoginPage: React.FC = () => {
                     aria-label={`Show image ${index + 1}`}
                     aria-current={index === activeSlide}
                     onClick={() => setActiveSlide(index)}
-                    className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
-                      index === activeSlide ? 'w-7 bg-white' : 'w-2.5 bg-primary-300/60 hover:bg-primary-200'
+                    className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-white ${
+                      index === activeSlide
+                        ? 'w-7 bg-primary-700 dark:bg-white'
+                        : 'w-2.5 bg-primary-400/50 hover:bg-primary-500 dark:bg-primary-300/60 dark:hover:bg-primary-200'
                     }`}
                   />
                 ))}

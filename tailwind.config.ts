@@ -6,9 +6,28 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Segoe UI Variable', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['Cascadia Code', 'JetBrains Mono', 'Consolas', 'monospace'],
       },
       colors: {
+        abyss: 'rgb(var(--abyss) / <alpha-value>)',
+        panel: 'rgb(var(--panel) / <alpha-value>)',
+        'panel-2': 'rgb(var(--panel-2) / <alpha-value>)',
+        line: 'rgb(var(--line) / <alpha-value>)',
+        'line-strong': 'rgb(var(--line-strong) / <alpha-value>)',
+        surface: {
+          1: 'rgb(var(--surface-1) / <alpha-value>)',
+          2: 'rgb(var(--surface-2) / <alpha-value>)',
+        },
+        heading: 'rgb(var(--heading) / <alpha-value>)',
+        body: 'rgb(var(--body) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        faint: 'rgb(var(--faint) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
+        positive: 'rgb(var(--positive) / <alpha-value>)',
+        caution: 'rgb(var(--caution) / <alpha-value>)',
+        negative: 'rgb(var(--negative) / <alpha-value>)',
+        'sky-accent': 'rgb(var(--sky-accent) / <alpha-value>)',
         primary: {
           50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
           400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',

@@ -76,7 +76,7 @@ export const YearEndPromotionDialog: React.FC<YearEndPromotionDialogProps> = ({
       <DialogContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Source Class (Current)
             </label>
             <Select
@@ -93,7 +93,7 @@ export const YearEndPromotionDialog: React.FC<YearEndPromotionDialogProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Destination Class (Next Year)
             </label>
             <Select
@@ -122,30 +122,30 @@ export const YearEndPromotionDialog: React.FC<YearEndPromotionDialogProps> = ({
 
         {/* Learners Preview */}
         {sourceClassId && (
-          <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300 flex justify-between items-center">
+          <div className="border border-line rounded-lg overflow-hidden">
+            <div className="bg-surface-1/50 p-2.5 text-xs font-semibold text-muted flex justify-between items-center">
               <span>Learners to be promoted ({learnersStatus.length})</span>
               <Badge variant="outline">{sourceClass?.name}</Badge>
             </div>
 
-            <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+            <div className="max-h-60 overflow-y-auto divide-y divide-line text-xs">
               {loadingLearners ? (
-                <div className="p-4 text-center text-slate-400">Loading learners...</div>
+                <div className="p-4 text-center text-muted">Loading learners...</div>
               ) : learnersStatus.length === 0 ? (
-                <div className="p-4 text-center text-slate-400">
+                <div className="p-4 text-center text-muted">
                   No learners found in this class.
                 </div>
               ) : (
                 learnersStatus.map((ls) => (
                   <div
                     key={ls.borrower.id}
-                    className="p-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    className="p-2.5 flex items-center justify-between hover:bg-surface-2"
                   >
                     <div>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                      <span className="font-medium text-body">
                         {ls.borrower.name}
                       </span>
-                      <span className="ml-2 font-mono text-slate-400">
+                      <span className="ml-2 font-mono text-muted">
                         ({ls.borrower.borrower_no || 'N/A'})
                       </span>
                     </div>

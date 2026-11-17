@@ -15,8 +15,6 @@ import {
   CalendarClock,
   Download,
   Monitor,
-  Printer,
-  ScanLine,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -47,9 +45,6 @@ export const SettingsPage: React.FC = () => {
   const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(
     () => localStorage.getItem('library-notification-sound') === 'on'
   )
-  const [scannerTestValue, setScannerTestValue] = useState('')
-  const [preferredPrinter, setPreferredPrinter] = useState(() => localStorage.getItem('library-preferred-printer') || '')
-  const [printPaperSize, setPrintPaperSize] = useState(() => localStorage.getItem('library-print-paper-size') || 'A4')
 
   // Profile Form
   const [profileForm, setProfileForm] = useState({
@@ -196,26 +191,19 @@ export const SettingsPage: React.FC = () => {
     }
   }
 
-  const saveDeviceSettings = (event: React.FormEvent) => {
-    event.preventDefault()
-    localStorage.setItem('library-preferred-printer', preferredPrinter.trim())
-    localStorage.setItem('library-print-paper-size', printPaperSize)
-    toast.success('Scanner and printer preferences saved on this device.')
-  }
-
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+        <h2 className="text-xl font-bold text-heading sm:text-2xl">
           Library Settings
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-faint">
           Configure school identity, issue policies, locations, subjects, and fee rules
         </p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="max-w-full">
+        <TabsList className="overflow-x-auto max-w-full">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
           <TabsTrigger value="borrower_types">Borrower Policies</TabsTrigger>
           <TabsTrigger value="locations">Locations & Shelves</TabsTrigger>
@@ -223,7 +211,6 @@ export const SettingsPage: React.FC = () => {
           <TabsTrigger value="classes">Classes & Streams</TabsTrigger>
           <TabsTrigger value="charges">Charge & Fee Rules</TabsTrigger>
           <TabsTrigger value="automation">Notifications & Reports</TabsTrigger>
-          <TabsTrigger value="devices">Scanner & Printer</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Profile */}
@@ -298,23 +285,23 @@ export const SettingsPage: React.FC = () => {
               <CardTitle>Borrower Types & Lending Rules</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {(borrowerTypes || []).map((type) => (
                   <div key={type.id} className="py-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                      <span className="font-bold text-sm text-heading">
                         {type.name}
                       </span>
-                      <span className="text-xs text-slate-400 capitalize">
+                      <span className="text-xs text-muted capitalize">
                         Rule: {type.return_rule.replace('_', ' ')}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 dark:text-slate-400">
-                      <div>Max items: <strong className="text-slate-800 dark:text-slate-200">{type.max_items}</strong></div>
-                      <div>Loan days: <strong className="text-slate-800 dark:text-slate-200">{type.return_days}</strong></div>
-                      <div>Max renewals: <strong className="text-slate-800 dark:text-slate-200">{type.max_renewals}</strong></div>
-                      <div>Can reserve: <strong className="text-slate-800 dark:text-slate-200">{type.can_reserve ? 'Yes' : 'No'}</strong></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted">
+                      <div>Max items: <strong className="text-body">{type.max_items}</strong></div>
+                      <div>Loan days: <strong className="text-body">{type.return_days}</strong></div>
+                      <div>Max renewals: <strong className="text-body">{type.max_renewals}</strong></div>
+                      <div>Can reserve: <strong className="text-body">{type.can_reserve ? 'Yes' : 'No'}</strong></div>
                     </div>
                   </div>
                 ))}
@@ -341,14 +328,14 @@ export const SettingsPage: React.FC = () => {
                 </Button>
               </form>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {(locations || []).map((loc) => (
                   <div key={loc.id} className="flex items-center justify-between py-2.5 text-xs">
-                    <span className="font-medium text-slate-800 dark:text-slate-200">{loc.name}</span>
+                    <span className="font-medium text-body">{loc.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-danger"
+                      className="h-7 w-7 p-0 text-muted hover:text-danger"
                       onClick={() => handleDeleteLocation(loc.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -378,14 +365,14 @@ export const SettingsPage: React.FC = () => {
                 </Button>
               </form>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {(subjects || []).map((sub) => (
                   <div key={sub.id} className="flex items-center justify-between py-2.5 text-xs">
-                    <span className="font-medium text-slate-800 dark:text-slate-200">{sub.name}</span>
+                    <span className="font-medium text-body">{sub.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-danger"
+                      className="h-7 w-7 p-0 text-muted hover:text-danger"
                       onClick={() => handleDeleteSubject(sub.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -420,19 +407,19 @@ export const SettingsPage: React.FC = () => {
                 </Button>
               </form>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {(classes || []).map((c) => (
                   <div key={c.id} className="flex items-center justify-between py-2.5 text-xs">
                     <div>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{c.name}</span>
+                      <span className="font-semibold text-heading">{c.name}</span>
                       {c.grade_level && (
-                        <span className="text-slate-400 ml-2">({c.grade_level})</span>
+                        <span className="text-muted ml-2">({c.grade_level})</span>
                       )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-danger"
+                      className="h-7 w-7 p-0 text-muted hover:text-danger"
                       onClick={() => handleDeleteClass(c.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -496,7 +483,7 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+                <p className="text-sm text-muted">
                   {themePreference === 'system'
                     ? 'The library follows your device’s light or dark setting.'
                     : `The library is using ${themePreference} mode.`}
@@ -527,10 +514,10 @@ export const SettingsPage: React.FC = () => {
                     className="mt-1 h-4 w-4 accent-primary"
                   />
                   <span>
-                    <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <span className="block text-sm font-semibold text-heading">
                       Play a short tone for new notifications
                     </span>
-                    <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                    <span className="mt-1 block text-xs text-muted">
                       This preference is saved on this browser. Enable it on each librarian workstation that should play a tone.
                     </span>
                   </span>
@@ -541,20 +528,20 @@ export const SettingsPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <CalendarClock className="h-5 w-5 text-[#8a5a00] dark:text-[#f3d37e]" />
+                  <CalendarClock className="h-5 w-5 text-caution" />
                   <CardTitle>Scheduled library notices</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
-                <div className="rounded-lg bg-[#f3f4e4] p-3 dark:bg-[#354126]">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">Inventory snapshot every 30 days</p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                <div className="rounded-lg bg-caution/10 p-3">
+                  <p className="font-semibold text-heading">Inventory snapshot every 30 days</p>
+                  <p className="mt-1 text-xs text-muted">
                     A complete, saved copy-by-copy snapshot is created automatically and appears in Notifications.
                   </p>
                 </div>
-                <div className="rounded-lg bg-[#f4e2d9] p-3 dark:bg-[#4c3027]">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">Uncollected reservations after 3 days</p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                <div className="rounded-lg bg-negative/10 p-3">
+                  <p className="font-semibold text-heading">Uncollected reservations after 3 days</p>
+                  <p className="mt-1 text-xs text-muted">
                     The reservation expires and a printable warning letter is added to Notifications.
                   </p>
                 </div>
@@ -567,73 +554,7 @@ export const SettingsPage: React.FC = () => {
             </Card>
           </div>
         </TabsContent>
-
-        <TabsContent value="devices">
-          <style>{`@page { size: ${printPaperSize.toLowerCase()} portrait; } @media print { body * { visibility: hidden !important; } #device-print-test, #device-print-test * { visibility: visible !important; } #device-print-test { display: block !important; position: absolute; inset: 24mm; } }`}</style>
-          <div id="device-print-test" className="hidden">
-            <h1>School Library</h1>
-            <h2>Printer test page</h2>
-            <p>This confirms that your browser can print from the library system.</p>
-            <p>Selected paper size: {printPaperSize}</p>
-            <p>Printed: {new Date().toLocaleString()}</p>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle><span className="inline-flex items-center gap-2"><ScanLine className="h-5 w-5" /> Barcode scanner</span></CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Most USB and Bluetooth barcode scanners work as a keyboard. Pair the scanner with this computer, set its suffix to Enter, then scan into a barcode field on Issue or Return.
-                </p>
-                <Input
-                  label="Try a scan"
-                  value={scannerTestValue}
-                  onChange={(event) => setScannerTestValue(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      toast.success(scannerTestValue ? `Scanner read ${scannerTestValue}` : 'Scan a barcode first.')
-                    }
-                  }}
-                  placeholder="Focus here, then scan a barcode"
-                />
-                <p className="text-xs text-slate-500">The scanner test does not create or update a catalog record.</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle><span className="inline-flex items-center gap-2"><Printer className="h-5 w-5" /> Printer and catalog</span></CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4" onSubmit={saveDeviceSettings}>
-                  <Input
-                    label="Preferred printer (this device)"
-                    value={preferredPrinter}
-                    onChange={(event) => setPreferredPrinter(event.target.value)}
-                    placeholder="e.g. Library Office Printer"
-                  />
-                  <Select
-                    label="Paper size"
-                    options={[{ value: 'A4', label: 'A4' }, { value: 'Letter', label: 'Letter' }]}
-                    value={printPaperSize}
-                    onChange={(event) => setPrintPaperSize(event.target.value)}
-                  />
-                  <p className="text-xs text-slate-500">
-                    Your browser opens the system print dialog, where you choose the connected printer, paper tray, and copies. Use Catalog → Print catalog to print the current catalog view.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="submit" leftIcon={<Save className="h-4 w-4" />}>Save preferences</Button>
-                    <Button type="button" variant="outline" leftIcon={<Printer className="h-4 w-4" />} onClick={() => window.print()}>Print test page</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   )
 }
-

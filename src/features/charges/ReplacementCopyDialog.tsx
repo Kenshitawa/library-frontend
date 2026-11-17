@@ -75,25 +75,25 @@ export const ReplacementCopyDialog: React.FC<ReplacementCopyDialogProps> = ({
       </DialogHeader>
 
       <DialogContent className="space-y-4">
-        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3 text-xs space-y-1">
+        <div className="rounded-lg border border-line bg-surface-1/50 p-3 text-xs space-y-1">
           <div className="flex justify-between">
-            <span className="text-slate-500">Book Title:</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <span className="text-faint">Book Title:</span>
+            <span className="font-semibold text-body">
               {charge.issue?.copy?.title?.title || 'Unknown Title'}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Borrower:</span>
+            <span className="text-faint">Borrower:</span>
             <span>{charge.borrower?.name}</span>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase text-muted mb-1">
             New Copy Barcode
           </label>
           <div className="relative">
-            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <Input
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
@@ -104,7 +104,7 @@ export const ReplacementCopyDialog: React.FC<ReplacementCopyDialogProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase text-muted mb-1">
             Book Condition
           </label>
           <Select
@@ -134,4 +134,3 @@ export const ReplacementCopyDialog: React.FC<ReplacementCopyDialogProps> = ({
     </Dialog>
   )
 }
-

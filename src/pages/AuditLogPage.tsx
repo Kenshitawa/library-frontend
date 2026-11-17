@@ -27,7 +27,7 @@ export const AuditLogPage: React.FC = () => {
       header: 'Timestamp',
       sortable: true,
       accessor: (row) => (
-        <span className="text-xs text-slate-500 font-mono">
+        <span className="text-xs text-faint font-mono">
           {formatDateTime(row.created_at)}
         </span>
       ),
@@ -36,7 +36,7 @@ export const AuditLogPage: React.FC = () => {
       key: 'user',
       header: 'Staff User',
       accessor: (row: any) => (
-        <span className="text-xs font-medium text-slate-900 dark:text-slate-100">
+        <span className="text-xs font-medium text-heading">
           {row.user?.name || row.user_id || 'System'}
         </span>
       ),
@@ -65,7 +65,7 @@ export const AuditLogPage: React.FC = () => {
       key: 'entity',
       header: 'Entity / Table',
       accessor: (row) => (
-        <span className="text-xs font-mono font-medium text-slate-700 dark:text-slate-300">
+        <span className="text-xs font-mono font-medium text-body">
           {row.entity}
         </span>
       ),
@@ -74,7 +74,7 @@ export const AuditLogPage: React.FC = () => {
       key: 'entity_id',
       header: 'Record ID',
       accessor: (row) => (
-        <span className="text-xs font-mono text-slate-400 truncate max-w-[120px] block">
+        <span className="text-xs font-mono text-muted truncate max-w-[120px] block">
           {row.entity_id}
         </span>
       ),
@@ -107,16 +107,16 @@ export const AuditLogPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+        <h2 className="text-xl font-bold text-heading sm:text-2xl">
           System Audit Log
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-faint">
           Immutable audit record of all create, update, delete, issue, and return transactions (FR-61, FR-62)
         </p>
       </div>
 
       {/* Filter toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white dark:bg-slate-900 p-4 rounded-card border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-panel p-4 rounded-2xl border border-line shadow-sm">
         <Select
           options={[
             { value: '', label: 'All Actions' },
@@ -165,7 +165,7 @@ export const AuditLogPage: React.FC = () => {
             <CardTitle className="text-sm">Before / After JSON State</CardTitle>
             <button
               onClick={() => setExpandedRowId(null)}
-              className="text-xs text-slate-400 hover:text-slate-600"
+              className="text-xs text-muted hover:text-faint"
             >
               Close
             </button>
@@ -177,14 +177,14 @@ export const AuditLogPage: React.FC = () => {
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
                   <div>
-                    <span className="font-bold text-slate-400 block mb-1">Before:</span>
-                    <pre className="p-3 bg-slate-100 dark:bg-slate-800 rounded-md overflow-x-auto max-h-48 text-[11px]">
+                    <span className="font-bold text-muted block mb-1">Before:</span>
+                    <pre className="p-3 bg-surface-2 rounded-md overflow-x-auto max-h-48 text-[11px]">
                       {active.before ? JSON.stringify(active.before, null, 2) : 'null (Created)'}
                     </pre>
                   </div>
                   <div>
-                    <span className="font-bold text-slate-400 block mb-1">After:</span>
-                    <pre className="p-3 bg-slate-100 dark:bg-slate-800 rounded-md overflow-x-auto max-h-48 text-[11px]">
+                    <span className="font-bold text-muted block mb-1">After:</span>
+                    <pre className="p-3 bg-surface-2 rounded-md overflow-x-auto max-h-48 text-[11px]">
                       {active.after ? JSON.stringify(active.after, null, 2) : 'null (Deleted)'}
                     </pre>
                   </div>

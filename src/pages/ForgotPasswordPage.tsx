@@ -37,16 +37,16 @@ export const ForgotPasswordPage: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-abyss p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white shadow-md">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-heading shadow-md">
             <Library className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-heading">
             Reset Password
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-muted">
             {libProfile?.name || 'School Library System'}
           </p>
         </div>
@@ -58,11 +58,11 @@ export const ForgotPasswordPage: React.FC = () => {
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-50 text-success dark:bg-emerald-950/50">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-semibold text-heading">
                   Check your email
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  We've sent a password reset link to <strong className="text-slate-700 dark:text-slate-200">{email}</strong>.
+                <p className="text-sm text-muted">
+                  We've sent a password reset link to <strong className="text-body">{email}</strong>.
                 </p>
                 <div className="pt-2">
                   <Link to="/login">
@@ -104,7 +104,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 <div className="text-center pt-2">
                   <Link
                     to="/login"
-                    className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    className="inline-flex items-center text-xs font-medium text-faint hover:text-faint dark:text-muted dark:hover:text-heading"
                   >
                     <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                     Back to Sign In

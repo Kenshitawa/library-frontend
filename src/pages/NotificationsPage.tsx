@@ -54,11 +54,11 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-card border border-[#b8d3c4] bg-[#d7e9dc] p-5 dark:border-[#31584d] dark:bg-[#173c35] sm:p-6">
+      <div className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">Notifications</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            <h2 className="text-xl font-bold text-heading sm:text-2xl">Notifications</h2>
+            <p className="mt-1 text-sm text-muted">
               Inventory snapshots, reservation notices, and return reminders.
             </p>
           </div>
@@ -77,7 +77,7 @@ export const NotificationsPage: React.FC = () => {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-slate-500">Loading notifications…</div>
+            <div className="p-8 text-center text-sm text-faint">Loading notifications…</div>
           ) : notifications.length === 0 ? (
             <div className="p-8">
               <EmptyState
@@ -87,7 +87,7 @@ export const NotificationsPage: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="divide-y divide-[#d9e6d8] dark:divide-[#31514a]">
+            <div className="divide-y divide-line">
               {notifications.map((notification) => {
                 const isInventory = notification.type === 'monthly_inventory_report'
                 const isWarning = notification.type === 'reservation_pickup_warning'
@@ -95,7 +95,7 @@ export const NotificationsPage: React.FC = () => {
                   <article
                     key={notification.id}
                     className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5 ${
-                      notification.read_at ? '' : 'bg-[#f1f7e9] dark:bg-[#25443a]'
+                      notification.read_at ? '' : 'bg-accent/5'
                     }`}
                   >
                     <button
@@ -105,22 +105,22 @@ export const NotificationsPage: React.FC = () => {
                     >
                       <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                         isWarning
-                          ? 'bg-[#f5dfd9] text-[#a54c3b] dark:bg-[#59332e] dark:text-[#f0b5a7]'
-                          : 'bg-[#dcefe5] text-[#176557] dark:bg-[#214a40] dark:text-[#a9e3ce]'
+                          ? 'bg-negative/10 text-negative'
+                          : 'bg-positive/10 text-positive'
                       }`}>
                         {isWarning ? <MailWarning className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
                       </span>
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          <span className="font-semibold text-heading">
                             {notification.subject || 'Library notification'}
                           </span>
                           {!notification.read_at && <Badge variant="info" size="sm">New</Badge>}
                         </span>
-                        <span className="mt-1 block whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
+                        <span className="mt-1 block whitespace-pre-line text-sm text-muted">
                           {notification.body || 'Open to view details.'}
                         </span>
-                        <span className="mt-2 block text-xs text-slate-500">
+                        <span className="mt-2 block text-xs text-faint">
                           {new Date(notification.created_at).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' })}
                           {notification.borrower?.name ? ` · ${notification.borrower.name}` : ''}
                         </span>

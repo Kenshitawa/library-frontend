@@ -87,37 +87,37 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({ charge, open, onCl
       </DialogHeader>
 
       <DialogContent className="space-y-4">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-2 text-xs">
+        <div className="rounded-xl border border-line bg-surface-1/50 p-4 space-y-2 text-xs">
           <div className="flex justify-between">
-            <span className="text-slate-500">Borrower:</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
+            <span className="text-faint">Borrower:</span>
+            <span className="font-semibold text-body">
               {charge.borrower?.name} ({charge.borrower?.borrower_no || 'Staff'})
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Charge Description:</span>
-            <span className="text-slate-700 dark:text-slate-300">{charge.reason || charge.type}</span>
+            <span className="text-faint">Charge Description:</span>
+            <span className="text-body">{charge.reason || charge.type}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Total Charge Amount:</span>
+            <span className="text-faint">Total Charge Amount:</span>
             <span className="font-mono">{formatCurrency(charge.amount)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Already Paid:</span>
+            <span className="text-faint">Already Paid:</span>
             <span className="font-mono text-success">{formatCurrency(charge.paid_amount || 0)}</span>
           </div>
-          <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 font-bold text-sm">
-            <span className="text-slate-700 dark:text-slate-300">Remaining Balance:</span>
+          <div className="flex justify-between border-t border-line pt-2 font-bold text-sm">
+            <span className="text-body">Remaining Balance:</span>
             <span className="font-mono text-danger">{formatCurrency(outstandingCents)}</span>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase text-muted mb-1">
             Payment Amount (Rands)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-semibold text-sm">
               R
             </span>
             <Input
@@ -130,13 +130,13 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({ charge, open, onCl
               className="pl-8 text-base font-semibold"
             />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-muted mt-1">
             Supports partial payments. Outstanding balance will update automatically.
           </p>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase text-muted mb-1">
             Notes / Reference
           </label>
           <Input

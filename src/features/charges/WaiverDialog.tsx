@@ -64,19 +64,19 @@ export const WaiverDialog: React.FC<WaiverDialogProps> = ({ charge, open, onClos
       <DialogContent className="space-y-4">
         <div className="rounded-lg border border-warning/30 bg-warning-50/50 dark:bg-warning-950/20 p-3 text-xs space-y-1">
           <div className="flex justify-between">
-            <span className="text-slate-500">Amount to Waive:</span>
+            <span className="text-faint">Amount to Waive:</span>
             <span className="font-bold text-danger font-mono">
               {formatCurrency(charge.amount - (charge.paid_amount || 0))}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Borrower:</span>
+            <span className="text-faint">Borrower:</span>
             <span className="font-semibold">{charge.borrower?.name}</span>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase text-muted mb-1">
             Waiver Reason (Mandatory)
           </label>
           <Input

@@ -52,7 +52,7 @@ export const Sheet: React.FC<SheetProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
+        className="fixed inset-0 bg-[#02040a]/80 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -61,8 +61,7 @@ export const Sheet: React.FC<SheetProps> = ({
       <div
         ref={sheetRef}
         className={cn(
-          'relative z-50 flex h-full w-full flex-col overflow-y-auto bg-white p-6 shadow-2xl transition-transform duration-200 ease-in-out animate-in slide-in-from-right',
-          'dark:bg-slate-900 dark:border-l dark:border-slate-800',
+          'relative z-50 flex h-full w-full flex-col overflow-y-auto bg-panel p-6 shadow-2xl transition-transform duration-200 ease-in-out animate-in slide-in-from-right border-l border-line',
           widthStyles[width],
           className
         )}
@@ -71,7 +70,7 @@ export const Sheet: React.FC<SheetProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Close sheet"
-          className="absolute right-4 top-4 rounded-md p-1 text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="absolute right-4 top-4 rounded-lg border border-line-strong p-1.5 text-muted hover:text-heading hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-teal-400/40"
         >
           <X className="h-5 w-5" />
         </button>
@@ -87,7 +86,7 @@ export const SheetHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   return (
-    <div className={cn('flex flex-col space-y-1.5 pb-4 border-b border-slate-100 dark:border-slate-800', className)} {...props}>
+    <div className={cn('flex flex-col space-y-1.5 pb-4 border-b border-line', className)} {...props}>
       {children}
     </div>
   )
@@ -100,7 +99,7 @@ export const SheetTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
 }) => {
   return (
     <h2
-      className={cn('text-lg font-semibold text-slate-900 dark:text-slate-100 pr-6', className)}
+      className={cn('text-lg font-semibold text-heading pr-6', className)}
       {...props}
     >
       {children}
@@ -114,7 +113,7 @@ export const SheetDescription: React.FC<React.HTMLAttributes<HTMLParagraphElemen
   ...props
 }) => {
   return (
-    <p className={cn('text-sm text-slate-500 dark:text-slate-400', className)} {...props}>
+    <p className={cn('text-xs text-muted', className)} {...props}>
       {children}
     </p>
   )
@@ -139,7 +138,7 @@ export const SheetFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => {
   return (
     <div
-      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto', className)}
+      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 border-t border-line mt-auto', className)}
       {...props}
     >
       {children}

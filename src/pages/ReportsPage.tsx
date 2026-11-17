@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AlertCircle, BarChart3, Download, Printer } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -10,9 +11,11 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { useBorrowerTypes, useClasses } from '@/hooks/useBorrowers'
 import { useSubjects } from '@/hooks/useTitles'
+import { useLibraryProfile } from '@/hooks/useLibraryProfile'
 import { supabase } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatDateTime } from '@/lib/utils'
 import { toCsv } from '@/lib/reports'
+import { printReportPdf } from '@/lib/reportPdf'
 
 type ReportType = 'circulation' | 'outstanding' | 'condition' | 'collection' | 'inventory'
 
@@ -98,11 +101,25 @@ interface ReportTable {
 
 const PAGE_SIZE = 1000
 
+const REPORT_TITLES: Record<ReportType, string> = {
+  circulation: 'Circulation by Title and Class',
+  outstanding: 'Outstanding Returns',
+  condition: 'Lost and Damaged Items',
+  collection: 'Collection Inventory',
+  inventory: 'Full Copy-by-Copy Inventory',
+}
+
 function localDateValue(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function displayDate(value: string): string {
+  if (!value) return '—'
+  const date = new Date(`${value}T12:00:00`)
+  return Number.isNaN(date.getTime()) ? value : formatDate(date)
 }
 
 async function fetchAllPages<T>(createQuery: () => any): Promise<T[]> {
@@ -334,6 +351,7 @@ export const ReportsPage: React.FC = () => {
   const { data: classes = [] } = useClasses()
   const { data: borrowerTypes = [] } = useBorrowerTypes()
   const { data: subjects = [] } = useSubjects()
+  const { profile: libraryProfile } = useLibraryProfile()
 
   const dateError = !['collection', 'inventory'].includes(reportType) && fromDate && toDate && fromDate > toDate
     ? 'The start date must be on or before the end date.'
@@ -456,18 +474,96 @@ export const ReportsPage: React.FC = () => {
     [reportType, data]
   )
 
+  const activeFilters = useMemo(() => {
+    const filters: string[] = []
+
+    if (reportType !== 'collection' && reportType !== 'inventory') {
+      const label = reportType === 'outstanding' ? 'Due' : 'Issued'
+      filters.push(`${label} ${displayDate(fromDate)} to ${displayDate(toDate)}`)
+      filters.push(`Class: ${classes.find((item) => item.id === classId)?.name || 'All classes'}`)
+      filters.push(
+        `Borrower type: ${
+          borrowerTypes.find((item) => item.id === borrowerTypeId)?.name || 'All borrower types'
+        }`
+      )
+    }
+
+    if (reportType !== 'inventory') {
+      filters.push(`Subject: ${subjects.find((item) => item.id === subjectId)?.name || 'All subjects'}`)
+    }
+
+    if (snapshotId && reportType === 'inventory') filters.push('Saved monthly snapshot')
+
+    return filters
+  }, [
+    reportType,
+    fromDate,
+    toDate,
+    classId,
+    borrowerTypeId,
+    subjectId,
+    classes,
+    borrowerTypes,
+    subjects,
+    snapshotId,
+  ])
+
+  const generatedAt = useMemo(
+    () => new Date(),
+    [reportType, fromDate, toDate, classId, borrowerTypeId, subjectId, data]
+  )
+
   const handleExport = useCallback(() => {
-    const csv = toCsv(table.headers, table.rows.map((row) => row.cells))
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `library-${reportType}-${localDateValue(new Date())}.csv`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    try {
+      const csv = toCsv(table.headers, table.rows.map((row) => row.cells))
+      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `library-${reportType}-${localDateValue(new Date())}.csv`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      toast.success('CSV export ready', {
+        description: `${REPORT_TITLES[reportType]} • ${table.rows.length.toLocaleString()} rows`,
+        duration: 4000,
+      })
+    } catch (err: any) {
+      toast.error('Could not export the report', {
+        description: err?.message || 'The CSV file could not be generated.',
+        duration: 6000,
+      })
+    }
   }, [reportType, table])
+
+  const handlePrint = useCallback(() => {
+    try {
+      printReportPdf({
+        libraryName: libraryProfile?.name || 'School Library',
+        libraryAddress: libraryProfile?.address,
+        libraryPhone: libraryProfile?.phone,
+        title: REPORT_TITLES[reportType],
+        generatedAt: new Date(),
+        filters: activeFilters,
+        headers: table.headers,
+        rows: table.rows.map((row) => row.cells),
+        metrics: table.metrics,
+      })
+
+      toast.success('Print-ready PDF opened', {
+        description: 'Use the print dialog to print, or save it as a PDF.',
+        duration: 4500,
+      })
+    } catch (err: any) {
+      toast.error('Could not open the report PDF', {
+        description:
+          err?.message || 'Allow pop-ups for this site, then try the Print button again.',
+        duration: 6000,
+      })
+    }
+  }, [activeFilters, libraryProfile, reportType, table])
 
   useEffect(() => {
     if (
@@ -493,10 +589,10 @@ export const ReportsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+        <h2 className="text-xl font-bold text-heading sm:text-2xl">
           Library Reports & Distribution
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-muted">
           Review circulation and inventory, then download a full copy-by-copy report or print the results.
         </p>
       </div>
@@ -567,7 +663,7 @@ export const ReportsPage: React.FC = () => {
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
-            <Button variant="outline" onClick={() => window.print()} disabled={isLoading || table.rows.length === 0}>
+            <Button variant="outline" onClick={handlePrint} disabled={isLoading || table.rows.length === 0}>
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
@@ -583,7 +679,7 @@ export const ReportsPage: React.FC = () => {
       )}
 
       {snapshotId && reportType === 'inventory' && !error && !isLoading && (
-        <div className="rounded-md border border-[#8a5a00]/30 bg-[#f3f4e4] p-3 text-sm text-[#654400] dark:bg-[#354126] dark:text-[#f3d37e]">
+        <div className="rounded-md border border-caution/30 bg-caution/10 p-3 text-sm text-caution">
           This saved monthly snapshot is ready. Its CSV download starts automatically when the page opens.
         </div>
       )}
@@ -592,8 +688,8 @@ export const ReportsPage: React.FC = () => {
         {table.metrics.map((metric) => (
           <Card key={metric.label}>
             <CardContent className="p-4">
-              <p className="text-xs font-semibold uppercase text-slate-500">{metric.label}</p>
-              <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <p className="text-xs font-semibold uppercase text-faint">{metric.label}</p>
+              <p className="mt-1 text-2xl font-bold text-heading">
                 {isLoading ? '—' : metric.value.toLocaleString()}
               </p>
             </CardContent>
@@ -603,8 +699,20 @@ export const ReportsPage: React.FC = () => {
 
       <Card>
         <CardContent className="p-0">
+          {!error && (
+            <div className="flex flex-col gap-1.5 border-b border-line px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-heading">{REPORT_TITLES[reportType]}</p>
+                <p className="mt-0.5 text-xs text-faint">{activeFilters.join('  •  ')}</p>
+              </div>
+              <p className="text-xs text-muted">
+                {isLoading ? 'Generating…' : `${table.rows.length.toLocaleString()} rows`}
+                {!isLoading && ` · Generated ${formatDateTime(generatedAt.toISOString())}`}
+              </p>
+            </div>
+          )}
           {isLoading ? (
-            <div className="p-8 text-center text-sm text-slate-500">Generating report…</div>
+            <div className="p-8 text-center text-sm text-faint">Generating report…</div>
           ) : !error && table.rows.length === 0 ? (
             <div className="p-10">
               <EmptyState
@@ -617,19 +725,19 @@ export const ReportsPage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                  <tr className="border-b border-line bg-surface-1">
                     {table.headers.map((header) => (
-                      <th key={header} className="whitespace-nowrap p-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <th key={header} className="whitespace-nowrap p-3 text-xs font-semibold text-muted">
                         {header}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-line">
                   {table.rows.map((row) => (
-                    <tr key={row.key} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <tr key={row.key} className="hover:bg-surface-2">
                       {row.cells.map((cell, index) => (
-                        <td key={`${row.key}-${index}`} className="p-3 text-slate-700 dark:text-slate-300">
+                        <td key={`${row.key}-${index}`} className="p-3 text-body">
                           {reportType === 'outstanding' && index === row.cells.length - 1 ? (
                             <Badge variant={cell === 'Overdue' ? 'danger' : 'success'}>{cell}</Badge>
                           ) : cell}
@@ -643,13 +751,6 @@ export const ReportsPage: React.FC = () => {
           ) : null}
         </CardContent>
       </Card>
-
-      <style>{`
-        @media print {
-          .report-controls, aside, nav, header, button { display: none !important; }
-          body { background: white !important; color: black !important; }
-        }
-      `}</style>
     </div>
   )
 }

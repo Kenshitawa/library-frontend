@@ -7,10 +7,10 @@ export const TeacherPortalPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+        <h2 className="text-xl font-bold text-heading sm:text-2xl">
           Teacher Portal
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-faint">
           Personal loans, reservations, and class textbook assignments view (Phase 6)
         </p>
       </div>

@@ -41,8 +41,8 @@ export interface MobileNavProps {
 /**
  * BoardUI-style navigation sheet: a floating rounded panel with a fixed brand
  * header, a scrollable nav body and a pinned primary action. Every workspace is
- * reachable here, including Settings, and the list scrolls independently so it
- * never runs off the bottom of the screen.
+ * reachable here, including Settings, and the body scrolls independently so the
+ * list never runs off the screen.
  */
 export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
   const { profile: libProfile } = useLibraryProfile()
@@ -106,15 +106,15 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Library navigation">
       <div
-        className="absolute inset-0 bg-[#0c1d17]/45 backdrop-blur-sm"
+        className="absolute inset-0 animate-fade-in bg-black/70 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      <div className="absolute inset-y-3 left-3 flex max-h-[calc(100dvh-1.5rem)] w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-3xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-[var(--page-shadow)]">
+      <div className="absolute inset-y-3 left-3 flex max-h-[calc(100dvh-1.5rem)] w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-2xl animate-in slide-in-from-left-4 fade-in duration-200">
         {/* Brand header */}
-        <div className="flex items-start gap-3 border-b border-[var(--surface-border)] px-4 py-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary text-white shadow-sm">
+        <div className="flex items-start gap-3 border-b border-line px-4 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-teal-400/25 bg-teal-400/10 text-accent">
             {libProfile?.logo_url ? (
               <img src={libProfile.logo_url} alt="Library logo" className="h-full w-full object-contain" />
             ) : (
@@ -122,10 +122,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+            <p className="truncate text-sm font-semibold tracking-[0.16em] text-heading">
               {libProfile?.name || 'School Library'}
             </p>
-            <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
+            <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.18em] text-faint">
               {profile?.name ?? 'Library Desk'}
             </p>
           </div>
@@ -134,7 +134,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
             ref={closeRef}
             onClick={onClose}
             aria-label="Close navigation"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-inset)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-heading"
           >
             <X className="h-4 w-4" />
           </button>
@@ -150,7 +150,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
             if (items.length === 0) return null
             return (
               <div key={group.label} className="pt-4 first:pt-3">
-                <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-faint">
                   {group.label}
                 </p>
                 <div className="space-y-0.5">
@@ -165,8 +165,8 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
                           cn(
                             'flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-primary text-white shadow-sm'
-                              : 'text-[var(--text-secondary)] hover:bg-[var(--surface-inset)] hover:text-[var(--text-primary)]'
+                              ? 'bg-surface-2 font-semibold text-heading'
+                              : 'font-medium text-muted hover:bg-surface-1 hover:text-heading'
                           )
                         }
                       >
@@ -183,11 +183,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({ open, onClose }) => {
 
         {/* Pinned primary action */}
         {isLibrarian && (
-          <div className="border-t border-[var(--surface-border)] p-3">
+          <div className="border-t border-line p-3">
             <Link
               to="/borrowers?new=1"
               onClick={onClose}
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="flex items-center justify-center gap-2 rounded-xl border border-teal-400/30 bg-teal-400/10 px-3 py-2.5 text-sm font-semibold text-accent transition hover:bg-teal-400/15"
             >
               <UserPlus className="h-4 w-4" />
               Add learner

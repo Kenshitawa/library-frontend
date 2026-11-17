@@ -1,11 +1,11 @@
 import React, { Suspense, lazy } from 'react'
-import { createBrowserRouter, isRouteErrorResponse, Link, Navigate, useRouteError } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { RouteErrorPage } from '@/pages/RouteErrorPage'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((module) => ({ default: module.LoginPage })))
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })))
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
 const CatalogPage = lazy(() => import('@/pages/CatalogPage').then((module) => ({ default: module.CatalogPage })))
@@ -31,42 +31,6 @@ const PageLoading: React.FC = () => (
   </div>
 )
 
-const RouteErrorPage: React.FC = () => {
-  const error = useRouteError()
-  const isChunkError = error instanceof Error && /dynamically imported module|loading chunk|failed to fetch/i.test(error.message)
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f4f5eb] px-5 py-12 dark:bg-[#14231c]">
-      <section className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-700 dark:bg-slate-900">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-xl text-amber-800 dark:bg-amber-950 dark:text-amber-200">!</div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">This page could not open</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          {isChunkError
-            ? 'A newer version of the library system is available. Reload the page to continue.'
-            : isRouteErrorResponse(error)
-              ? `The requested page returned an error (${error.status}).`
-              : 'Something went wrong while loading this page. Your library data is still saved.'}
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-          >
-            Reload page
-          </button>
-          <Link to="/catalog" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
-            Go to catalog
-          </Link>
-          <Link to="/borrowers" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
-            Go to borrowers
-          </Link>
-        </div>
-      </section>
-    </main>
-  )
-}
-
 const withSuspense = (element: React.ReactNode) => (
   <Suspense fallback={<PageLoading />}>{element}</Suspense>
 )
@@ -83,18 +47,13 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
   },
   {
-    path: '/reset-password',
-    element: withSuspense(<ResetPasswordPage />),
-    errorElement: <RouteErrorPage />,
-  },
-  {
     path: '/',
-    errorElement: <RouteErrorPage />,
     element: (
       <ProtectedRoute>
         {withSuspense(<AppLayout />)}
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorPage />,
     children: [
       {
         index: true,
@@ -224,4 +183,3 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
   },
 ])
-

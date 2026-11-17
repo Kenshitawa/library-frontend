@@ -87,10 +87,10 @@ export const ChargesPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Replacement Charges & Fines
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Track lost and damaged book fees, payments, waivers, and receipts
           </p>
         </div>
@@ -105,7 +105,7 @@ export const ChargesPage: React.FC = () => {
         <Card>
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Total Outstanding</p>
+              <p className="text-xs font-semibold text-faint uppercase">Total Outstanding</p>
               <h3 className="text-2xl font-bold text-danger mt-1">
                 {formatCurrency(summary?.totalOutstanding || 0)}
               </h3>
@@ -119,7 +119,7 @@ export const ChargesPage: React.FC = () => {
         <Card>
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Total Collected</p>
+              <p className="text-xs font-semibold text-faint uppercase">Total Collected</p>
               <h3 className="text-2xl font-bold text-success mt-1">
                 {formatCurrency(summary?.totalPaid || 0)}
               </h3>
@@ -133,12 +133,12 @@ export const ChargesPage: React.FC = () => {
         <Card>
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Waived</p>
-              <h3 className="text-2xl font-bold text-slate-600 dark:text-slate-300 mt-1">
+              <p className="text-xs font-semibold text-faint uppercase">Waived</p>
+              <h3 className="text-2xl font-bold text-muted mt-1">
                 {formatCurrency(summary?.totalWaived || 0)}
               </h3>
             </div>
-            <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-surface-2 text-faint flex items-center justify-center">
               <ShieldCheck className="h-5 w-5" />
             </div>
           </CardContent>
@@ -147,7 +147,7 @@ export const ChargesPage: React.FC = () => {
         <Card>
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase">Lost / Damaged Items</p>
+              <p className="text-xs font-semibold text-faint uppercase">Lost / Damaged Items</p>
               <h3 className="text-2xl font-bold text-warning mt-1">
                 {(summary?.lostBooksCount || 0) + (summary?.damagedBooksCount || 0)}
               </h3>
@@ -162,7 +162,7 @@ export const ChargesPage: React.FC = () => {
       {/* Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase text-slate-500">Status:</span>
+          <span className="text-xs font-semibold uppercase text-faint">Status:</span>
           {['open', 'partial', 'paid', 'waived', 'all'].map((st) => (
             <Button
               key={st}
@@ -177,7 +177,7 @@ export const ChargesPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-semibold uppercase text-slate-500">Type:</span>
+          <span className="text-xs font-semibold uppercase text-faint">Type:</span>
           <Select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -197,11 +197,11 @@ export const ChargesPage: React.FC = () => {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-slate-400">Loading charges...</div>
+            <div className="p-8 text-center text-muted">Loading charges...</div>
           ) : charges.length === 0 ? (
             <div className="p-10">
               <EmptyState
-                icon={<DollarSign className="h-8 w-8 text-slate-400" />}
+                icon={<DollarSign className="h-8 w-8 text-muted" />}
                 title="No charges found"
                 description="No fees or fines matching your filter criteria are currently open."
               />
@@ -210,41 +210,41 @@ export const ChargesPage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">Date</th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">Borrower</th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">Type</th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">Reason / Item</th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 font-mono text-right">
+                  <tr className="border-b border-line bg-surface-1">
+                    <th className="p-3 font-semibold text-muted">Date</th>
+                    <th className="p-3 font-semibold text-muted">Borrower</th>
+                    <th className="p-3 font-semibold text-muted">Type</th>
+                    <th className="p-3 font-semibold text-muted">Reason / Item</th>
+                    <th className="p-3 font-semibold text-muted font-mono text-right">
                       Amount
                     </th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 font-mono text-right">
+                    <th className="p-3 font-semibold text-muted font-mono text-right">
                       Paid
                     </th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 font-mono text-right">
+                    <th className="p-3 font-semibold text-muted font-mono text-right">
                       Outstanding
                     </th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">Status</th>
-                    <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 text-right">
+                    <th className="p-3 font-semibold text-muted">Status</th>
+                    <th className="p-3 font-semibold text-muted text-right">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-line">
                   {charges.map((charge) => {
                     const outstanding = (charge.amount || 0) - (charge.paid_amount || 0)
                     const isSettled = charge.status === 'paid' || charge.status === 'waived'
 
                     return (
-                      <tr key={charge.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-3 text-slate-500 whitespace-nowrap">
+                      <tr key={charge.id} className="hover:bg-surface-2">
+                        <td className="p-3 text-faint whitespace-nowrap">
                           {formatDate(charge.created_at)}
                         </td>
                         <td className="p-3">
-                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                          <div className="font-semibold text-heading">
                             {charge.borrower?.name}
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-muted">
                             {charge.borrower?.class?.name || charge.borrower?.borrower_no || ''}
                           </div>
                         </td>
@@ -262,7 +262,7 @@ export const ChargesPage: React.FC = () => {
                             {charge.type}
                           </Badge>
                         </td>
-                        <td className="p-3 text-slate-700 dark:text-slate-300 max-w-xs truncate">
+                        <td className="p-3 text-body max-w-xs truncate">
                           {charge.reason ||
                             (charge.issue?.copy?.title?.title
                               ? `Lost/Damaged copy of "${charge.issue.copy.title.title}"`
@@ -316,7 +316,7 @@ export const ChargesPage: React.FC = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="text-xs h-7 px-2 text-slate-500 hover:text-danger"
+                                  className="text-xs h-7 px-2 text-faint hover:text-danger"
                                   onClick={() => setSelectedChargeForWaive(charge)}
                                 >
                                   Waive
@@ -367,7 +367,7 @@ export const ChargesPage: React.FC = () => {
 
         <DialogContent className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase text-muted mb-1">
               Borrower
             </label>
             <Select
@@ -385,7 +385,7 @@ export const ChargesPage: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-semibold uppercase text-muted mb-1">
                 Charge Type
               </label>
               <Select
@@ -401,7 +401,7 @@ export const ChargesPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-semibold uppercase text-muted mb-1">
                 Amount (Rands)
               </label>
               <Input
@@ -415,7 +415,7 @@ export const ChargesPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase text-muted mb-1">
               Reason / Description
             </label>
             <Input

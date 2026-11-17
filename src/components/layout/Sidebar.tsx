@@ -83,54 +83,48 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
   return (
     <aside
       className={cn(
-        'relative hidden md:flex flex-col border-r border-[#b8d3c4] bg-[#d7e9dc] transition-all duration-200 dark:border-[#31584d] dark:bg-[#17382f] select-none z-30',
-        collapsed ? 'w-20' : 'w-64'
+        'relative hidden md:flex flex-col border-r border-line bg-panel transition-all duration-200 select-none z-30',
+        collapsed ? 'w-20' : 'w-[258px]'
       )}
     >
       {/* Brand Header */}
-      <div className="flex h-16 items-center px-4 border-b border-[#b8d3c4] dark:border-[#31584d]">
-        <div className="flex items-center gap-3 overflow-hidden">
-          {libProfile?.logo_url ? (
-            <img
-              src={libProfile.logo_url}
-              alt="Library Logo"
-              className="h-9 w-9 rounded-lg object-contain shrink-0"
-            />
-          ) : (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-sm">
+      <div className="border-b border-line px-4 py-4">
+        <Link to="/dashboard" className="group flex items-center gap-3 rounded-xl px-2 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400">
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-400/25 bg-teal-400/10 text-accent shadow-[0_0_30px_-8px_rgba(45,212,191,0.6)]">
+            {libProfile?.logo_url ? (
+              <img src={libProfile.logo_url} alt="Library logo" className="h-6 w-6 object-contain" />
+            ) : (
               <Library className="h-5 w-5" />
-            </div>
-          )}
+            )}
+            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-[#070c16] bg-emerald-400" />
+          </span>
           {!collapsed && (
-            <div className="flex flex-col truncate">
-              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
-                {libProfile?.name || 'School Library'}
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold tracking-[0.16em] text-heading">
+                {libProfile?.name || 'SCHOOL LIBRARY'}
               </span>
-              <span className="text-xs text-slate-500 dark:text-[#b4c3b6] truncate">Library Desk</span>
-            </div>
+              <span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.18em] text-faint">
+                Library desk
+              </span>
+            </span>
           )}
-        </div>
+        </Link>
       </div>
 
-      {isLibrarian && (
+      {isLibrarian && !collapsed && (
         <div className="px-3 pt-3">
           <Link
             to="/borrowers?new=1"
-            title={collapsed ? 'Add learner' : undefined}
-            aria-label="Add learner"
-            className={cn(
-              'flex items-center gap-3 rounded-button bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-800 transition-colors hover:bg-primary-100 dark:bg-[#254534] dark:text-[#c6edcf] dark:hover:bg-[#315641]',
-              collapsed && 'justify-center px-2'
-            )}
+            className="flex items-center gap-3 rounded-xl border border-teal-400/20 bg-teal-400/10 px-3 py-2 text-sm font-semibold text-accent transition hover:bg-teal-400/15"
           >
-            <UserPlus className="h-5 w-5 shrink-0" />
-            {!collapsed && <span className="truncate">Add learner</span>}
+            <UserPlus className="h-4 w-4 shrink-0" />
+            <span className="truncate">Add learner</span>
           </Link>
         </div>
       )}
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-5">
         {navigation.map((group) => {
           const visibleItems = group.items.filter(
             (item) => !item.librarianOnly || isLibrarian
@@ -138,47 +132,73 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse })
           if (visibleItems.length === 0) return null
 
           return (
-            <div key={group.group} className="space-y-1">
+            <div key={group.group} className="mb-6">
               {!collapsed && (
-                <h4 className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-[#a7b9aa]">
+                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-faint">
                   {group.group}
-                </h4>
+                </p>
               )}
-              <div className="space-y-0.5">
+              <ul className="space-y-1">
                 {visibleItems.map((item) => {
                   const Icon = item.icon
                   return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      title={collapsed ? item.label : undefined}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-3 rounded-button px-3 py-2 text-sm font-medium transition-colors',
-                          isActive
-                            ? 'bg-primary text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-[#c6dfd0] dark:text-[#c1d0c3] dark:hover:bg-[#294b3e] dark:hover:text-[#f0f5ef]',
-                          collapsed && 'justify-center px-2'
-                        )
-                      }
-                    >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                    </NavLink>
+                    <li key={item.to}>
+                      <NavLink
+                        to={item.to}
+                        title={collapsed ? item.label : undefined}
+                        aria-label={collapsed ? item.label : undefined}
+                        className={({ isActive }) =>
+                          cn(
+                            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400',
+                            isActive
+                              ? 'bg-surface-2 font-semibold text-heading'
+                              : 'font-medium text-muted hover:bg-surface-1 hover:text-heading',
+                            collapsed && 'justify-center px-2'
+                          )
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            {isActive && (
+                              <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-teal-300" />
+                            )}
+                            <Icon
+                              className={cn(
+                                'h-[18px] w-[18px] shrink-0',
+                                isActive ? 'text-accent' : 'text-faint group-hover:text-body'
+                              )}
+                            />
+                            {!collapsed && <span className="truncate">{item.label}</span>}
+                          </>
+                        )}
+                      </NavLink>
+                    </li>
                   )
                 })}
-              </div>
+              </ul>
             </div>
           )
         })}
-      </div>
+
+        {!collapsed && (
+          <div className="mt-4 rounded-xl border border-line bg-surface-1 p-3.5">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Library online
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-faint">
+              Circulation desk ready. Use Cmd+K for quick search.
+            </p>
+          </div>
+        )}
+      </nav>
 
       {/* Collapse Toggle Footer */}
-      <div className="border-t border-[#b8d3c4] p-3 dark:border-[#31584d]">
+      <div className="border-t border-line p-3">
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex w-full items-center justify-center gap-2 rounded-button p-2 text-xs font-medium text-slate-500 hover:bg-[#c6dfd0] dark:text-[#b4c3b6] dark:hover:bg-[#294b3e]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl p-2 text-xs font-medium text-faint hover:bg-surface-1 hover:text-body transition"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (

@@ -75,7 +75,7 @@ export const Dialog: React.FC<DialogProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
+        className="fixed inset-0 bg-[#02040a]/80 backdrop-blur-sm transition-opacity duration-150 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -84,8 +84,7 @@ export const Dialog: React.FC<DialogProps> = ({
       <div
         ref={dialogRef}
         className={cn(
-          'relative z-50 w-full overflow-hidden rounded-card border border-slate-200 bg-white p-6 shadow-xl transition-all duration-150 animate-in zoom-in-95',
-          'dark:border-slate-800 dark:bg-slate-900',
+          'relative z-50 w-full overflow-hidden rounded-2xl border border-line bg-panel p-6 text-body shadow-xl transition-all duration-150 animate-in zoom-in-95',
           maxWidthStyles[maxWidth],
           className
         )}
@@ -94,7 +93,7 @@ export const Dialog: React.FC<DialogProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 rounded-md p-1 text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="absolute right-4 top-4 rounded-lg border border-line-strong p-1.5 text-muted hover:text-heading hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-teal-400/40"
         >
           <X className="h-5 w-5" />
         </button>
@@ -123,7 +122,7 @@ export const DialogTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = (
 }) => {
   return (
     <h2
-      className={cn('text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100 pr-6', className)}
+      className={cn('text-lg font-semibold leading-none tracking-tight text-heading pr-6', className)}
       {...props}
     >
       {children}
@@ -137,7 +136,7 @@ export const DialogDescription: React.FC<React.HTMLAttributes<HTMLParagraphEleme
   ...props
 }) => {
   return (
-    <p className={cn('text-sm text-slate-500 dark:text-slate-400', className)} {...props}>
+    <p className={cn('text-xs leading-relaxed text-muted', className)} {...props}>
       {children}
     </p>
   )
@@ -162,7 +161,7 @@ export const DialogFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }) => {
   return (
     <div
-      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 border-t border-slate-100 dark:border-slate-800', className)}
+      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 border-t border-line', className)}
       {...props}
     >
       {children}

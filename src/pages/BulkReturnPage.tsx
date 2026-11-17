@@ -172,10 +172,10 @@ export const BulkReturnPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Class Bulk Returns Desk
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Select a class, scan returned textbooks, and see live tracking of which learners still hold books
           </p>
         </div>
@@ -185,7 +185,7 @@ export const BulkReturnPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="md:col-span-1">
           <CardContent className="p-4 sm:p-6 space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
               Select Class
             </label>
             <Select
@@ -201,7 +201,7 @@ export const BulkReturnPage: React.FC = () => {
             />
 
             {selectedClassId && (
-              <div className="pt-2 text-xs space-y-1 text-slate-500">
+              <div className="pt-2 text-xs space-y-1 text-faint">
                 <div className="flex justify-between">
                   <span>Total books to collect:</span>
                   <span className="font-semibold">{classIssues.length}</span>
@@ -221,12 +221,12 @@ export const BulkReturnPage: React.FC = () => {
 
         <Card className="md:col-span-2">
           <CardContent className="p-4 sm:p-6 space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
               Scan Book Barcode
             </label>
             <form onSubmit={handleScanBarcode} className="flex gap-2">
               <div className="relative flex-1">
-                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
                 <Input
                   ref={barcodeInputRef}
                   value={barcodeInput}
@@ -245,7 +245,7 @@ export const BulkReturnPage: React.FC = () => {
                 Return Book
               </Button>
             </form>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-faint">
               Scanner automatically focuses for continuous scanning. Books will be returned and copy status set to available.
             </p>
           </CardContent>
@@ -257,7 +257,7 @@ export const BulkReturnPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-line pb-3">
                 <div>
                   <CardTitle className="text-base font-semibold">
                     Outstanding Learners ({unreturnedCount})
@@ -269,7 +269,7 @@ export const BulkReturnPage: React.FC = () => {
               </CardHeader>
               <CardContent className="p-0">
                 {loadingIssues ? (
-                  <div className="p-6 text-center text-slate-500 text-sm">
+                  <div className="p-6 text-center text-faint text-sm">
                     Loading class records...
                   </div>
                 ) : classIssues.filter((i) => !i.returned).length === 0 ? (
@@ -284,39 +284,39 @@ export const BulkReturnPage: React.FC = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
-                          <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                        <tr className="border-b border-line bg-surface-1">
+                          <th className="p-3 font-semibold text-body">
                             Learner
                           </th>
-                          <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                          <th className="p-3 font-semibold text-body">
                             Admission #
                           </th>
-                          <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                          <th className="p-3 font-semibold text-body">
                             Book Title
                           </th>
-                          <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                          <th className="p-3 font-semibold text-body">
                             Barcode
                           </th>
-                          <th className="p-3 font-semibold text-slate-700 dark:text-slate-300 text-right">
+                          <th className="p-3 font-semibold text-body text-right">
                             Action
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      <tbody className="divide-y divide-line">
                         {classIssues
                           .filter((i) => !i.returned)
                           .map((item) => (
                             <tr
                               key={item.issueId}
-                              className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                              className="hover:bg-surface-2"
                             >
-                              <td className="p-3 font-medium text-slate-900 dark:text-slate-100">
+                              <td className="p-3 font-medium text-heading">
                                 {item.borrowerName}
                               </td>
-                              <td className="p-3 font-mono text-xs text-slate-500">
+                              <td className="p-3 font-mono text-xs text-faint">
                                 {item.admissionNumber || '—'}
                               </td>
-                              <td className="p-3 text-slate-700 dark:text-slate-300">
+                              <td className="p-3 text-body">
                                 {item.title}
                               </td>
                               <td className="p-3 font-mono text-xs text-primary font-semibold">
@@ -371,15 +371,15 @@ export const BulkReturnPage: React.FC = () => {
           {/* Recent Returns Feed */}
           <div className="lg:col-span-1">
             <Card>
-              <CardHeader className="border-b border-slate-200 dark:border-slate-800 pb-3">
+              <CardHeader className="border-b border-line pb-3">
                 <CardTitle className="text-base font-semibold flex items-center justify-between">
                   <span>Collected ({returnedCount})</span>
-                  <RotateCcw className="h-4 w-4 text-slate-400" />
+                  <RotateCcw className="h-4 w-4 text-muted" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
                 {recentReturns.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-6 text-center">
+                  <p className="text-xs text-muted py-6 text-center">
                     No books scanned yet in this session.
                   </p>
                 ) : (
@@ -387,15 +387,15 @@ export const BulkReturnPage: React.FC = () => {
                     {recentReturns.map((r, idx) => (
                       <div
                         key={idx}
-                        className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-900 text-xs flex items-start gap-2"
+                        className="rounded-lg border border-line bg-surface-1 p-2.5 text-xs flex items-start gap-2"
                       >
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div className="flex-1 overflow-hidden">
-                          <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          <p className="font-semibold text-heading truncate">
                             {r.title}
                           </p>
-                          <p className="text-slate-500">{r.borrowerName}</p>
-                          <div className="flex justify-between mt-1 text-[11px] text-slate-400">
+                          <p className="text-faint">{r.borrowerName}</p>
+                          <div className="flex justify-between mt-1 text-[11px] text-muted">
                             <span className="font-mono">{r.barcode}</span>
                             <span>{r.time}</span>
                           </div>

@@ -25,17 +25,13 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const variantStyles: Record<BadgeVariant, string> = {
-    primary:
-      'bg-primary-50 text-primary-700 border-primary-200 dark:bg-primary-950/60 dark:text-primary-300 dark:border-primary-800',
-    success:
-      'bg-success-50 text-success-700 border-success-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
-    warning:
-      'bg-warning-50 text-warning-700 border-warning-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
-    danger:
-      'bg-danger-50 text-danger-700 border-danger-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800',
-    info: 'bg-info-50 text-info-700 border-info-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
-    gray: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-    outline: 'bg-transparent text-slate-700 border-slate-300 dark:text-slate-200 dark:border-slate-600',
+    primary: 'border-teal-400/25 bg-teal-400/10 text-accent',
+    success: 'border-emerald-400/25 bg-emerald-400/10 text-positive',
+    warning: 'border-amber-400/25 bg-amber-400/10 text-caution',
+    danger: 'border-rose-400/25 bg-rose-400/10 text-negative',
+    info: 'border-sky-400/25 bg-sky-400/10 text-sky-accent',
+    gray: 'border-slate-400/20 bg-slate-400/10 text-body',
+    outline: 'border-line-strong bg-transparent text-body',
   }
 
   const defaultIcons: Record<BadgeVariant, React.ReactNode> = {

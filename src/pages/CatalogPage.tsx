@@ -4,9 +4,13 @@ import {
   Plus,
   Search,
   BookOpen,
+  BookMarked,
+  Layers,
+  ArrowUpRight,
   Eye,
   Library,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { Button } from '@/components/ui/Button'
@@ -25,6 +29,7 @@ import {
 import {
   useTitles,
   useSubjects,
+  useCreateSubject,
   useLocations,
   useCreateTitle,
   useAddCopy,
@@ -32,6 +37,7 @@ import {
 } from '@/hooks/useTitles'
 import type { Title, BookType } from '@/types'
 import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
 const createInitialTitle = () => ({
   title: '',
@@ -69,30 +75,29 @@ export const CatalogPage: React.FC = () => {
   const { data: locations } = useLocations()
   const createTitle = useCreateTitle()
   const addCopy = useAddCopy()
+  const createSubject = useCreateSubject()
+
+  /** Quick-add from either subject combobox: creates (or reuses) and returns the id. */
+  const handleQuickAddSubject = async (name: string) => {
+    const subject = await createSubject.mutateAsync(name)
+    toast.success(`Subject “${subject.name}” is ready to use.`)
+    return subject.id
+  }
 
   const [newTitle, setNewTitle] = useState(createInitialTitle)
   const [firstCopyBarcode, setFirstCopyBarcode] = useState('')
   const [firstCopyLocation, setFirstCopyLocation] = useState('')
   const [createdTitleId, setCreatedTitleId] = useState<string | null>(null)
-  const [existingTitleSelected, setExistingTitleSelected] = useState(false)
-  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false)
   const [typeManuallySelected, setTypeManuallySelected] = useState(false)
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [aiMessage, setAiMessage] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
-  const titleSearch = newTitle.title.trim()
-  const { data: titleSuggestions = [], isFetching: isSearchingTitles } = useTitles({
-    search: titleSearch,
-    suggestionsOnly: true,
-  })
 
   const handleOpenAddDialog = () => {
     setNewTitle(createInitialTitle())
     setFirstCopyBarcode('')
     setFirstCopyLocation('')
     setCreatedTitleId(null)
-    setExistingTitleSelected(false)
-    setShowTitleSuggestions(false)
     setTypeManuallySelected(false)
     setAiMessage(null)
     setFormError(null)
@@ -160,31 +165,6 @@ export const CatalogPage: React.FC = () => {
     }
   }
 
-  const handleSelectExistingTitle = (title: Title) => {
-    setCreatedTitleId(title.id)
-    setExistingTitleSelected(true)
-    setShowTitleSuggestions(false)
-    setNewTitle((current) => ({
-      ...current,
-      title: title.title,
-      subtitle: title.subtitle || '',
-      author: title.author || '',
-      isbn10: title.isbn10 || '',
-      isbn13: title.isbn13 || '',
-      publisher: title.publisher || '',
-      year: title.year || new Date().getFullYear(),
-      edition: title.edition || '1st',
-      language: title.language || 'English',
-      subject_id: title.subject_id || '',
-      grade_level: title.grade_level || '',
-      type: title.type,
-      description: title.description || '',
-    }))
-    setFirstCopyBarcode('')
-    setFirstCopyLocation('')
-    setFormError(null)
-  }
-
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
@@ -231,9 +211,7 @@ export const CatalogPage: React.FC = () => {
     } catch (err: any) {
       const message = err?.message || 'The catalog record could not be saved.'
       setFormError(
-        existingTitleSelected
-          ? `The copy was not added: ${message} Check the barcode and try again.`
-          : titleCreatedDuringSubmit || createdTitleId
+        titleCreatedDuringSubmit || createdTitleId
           ? `Title saved, but the first copy was not added: ${message} Correct the barcode and try again.`
           : message
       )
@@ -242,127 +220,274 @@ export const CatalogPage: React.FC = () => {
 
   const columns: Column<Title>[] = [
     {
-      key: 'title',
-      header: 'Books',
-      sortable: true,
+      key: 'cover',
+      header: 'Cover',
+      width: '60px',
       accessor: (row) => (
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="relative flex h-14 w-10 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-100 text-slate-400 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <BookOpen className="absolute h-4 w-4" aria-hidden="true" />
-            {row.cover_url ? (
-              <img
-                src={row.cover_url}
-                alt={`${row.title} book cover`}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover"
-                onError={(event) => {
-                  event.currentTarget.style.display = 'none'
-                }}
-              />
-            ) : <BookOpen className="h-4 w-4" aria-hidden="true" />}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-100">{row.title}</p>
-            <p className="mt-0.5 truncate text-xs text-slate-500">{row.publisher || 'Publisher unavailable'} · {row.subject?.name || 'Subject unavailable'} · Grade {row.grade_level || '—'}</p>
-          </div>
-          <span className={`shrink-0 text-xs font-semibold ${
-            (row.available_copies_count ?? 0) > 0 ? 'text-success-700 dark:text-success' : 'text-danger'
-          }`}>
-            {row.available_copies_count ?? 0}/{row.total_copies_count ?? 0} available
-          </span>
+        <div className="flex h-12 w-9 items-center justify-center rounded bg-surface-2 text-faint overflow-hidden shadow-sm">
+          {row.cover_url ? (
+            <img src={row.cover_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <BookOpen className="h-4 w-4" />
+          )}
         </div>
       ),
     },
+    {
+      key: 'title',
+      header: 'Title & Author',
+      sortable: true,
+      accessor: (row) => (
+        <div className="flex flex-col">
+          <span className="font-semibold text-heading hover:text-primary transition-colors">
+            {row.title}
+          </span>
+          <span className="text-xs text-faint">by {row.author || 'Unknown'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'isbn',
+      header: 'ISBN',
+      accessor: (row) => (
+        <span className="text-xs text-muted font-mono">
+          {row.isbn13 || row.isbn10 || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      sortable: true,
+      accessor: (row) => {
+        const variantMap: Record<BookType, 'info' | 'success' | 'warning'> = {
+          textbook: 'info',
+          library: 'success',
+          reference: 'warning',
+        }
+        return (
+          <Badge variant={variantMap[row.type as BookType] || 'gray'} size="sm">
+            {row.type}
+          </Badge>
+        )
+      },
+    },
+    {
+      key: 'subject',
+      header: 'Subject',
+      accessor: (row) => (
+        <span className="text-xs text-muted">
+          {row.subject?.name || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'copies',
+      header: 'Availability',
+      align: 'center',
+      accessor: (row) => {
+        const avail = row.available_copies_count ?? 0
+        const total = row.total_copies_count ?? 0
+        return (
+          <span
+            className={`text-xs font-semibold ${
+              avail > 0 ? 'text-success-700 dark:text-success' : 'text-danger'
+            }`}
+          >
+            {avail} / {total} available
+          </span>
+        )
+      },
+    },
   ]
 
+  const totalCopies = (titles || []).reduce(
+    (sum, title) => sum + (title.total_copies_count ?? 0),
+    0
+  )
+  const availableCopies = (titles || []).reduce(
+    (sum, title) => sum + (title.available_copies_count ?? 0),
+    0
+  )
+  const onLoanCopies = Math.max(0, totalCopies - availableCopies)
+
+  const collectionStats = [
+    {
+      label: 'Titles in view',
+      value: titles?.length ?? 0,
+      icon: BookMarked,
+      tint: 'border-teal-400/20 bg-teal-400/10 text-accent',
+    },
+    {
+      label: 'Total copies',
+      value: totalCopies,
+      icon: Layers,
+      tint: 'border-sky-400/20 bg-sky-400/10 text-sky-accent',
+    },
+    {
+      label: 'On shelf',
+      value: availableCopies,
+      icon: BookOpen,
+      tint: 'border-emerald-400/20 bg-emerald-400/10 text-positive',
+    },
+    {
+      label: 'On loan',
+      value: onLoanCopies,
+      icon: ArrowUpRight,
+      tint: 'border-amber-400/20 bg-amber-400/10 text-caution',
+    },
+  ]
+
+  const hasActiveFilters =
+    !!filters.search ||
+    !!filters.subjectId ||
+    (filters.bookType && filters.bookType !== 'all') ||
+    (filters.availability && filters.availability !== 'all')
+
+  const clearFilters = () =>
+    setFilters({ search: '', bookType: 'all', availability: 'all' })
+
   return (
-    <div id="catalog-printable" className="space-y-6">
-      <style>{`@page { size: ${localStorage.getItem('library-print-paper-size') === 'Letter' ? 'letter' : 'A4'} portrait; } @media print { body * { visibility: hidden !important; } #catalog-printable, #catalog-printable * { visibility: visible !important; } #catalog-printable { position: absolute; inset: 0; width: 100%; padding: 0; } #catalog-printable .catalog-no-print { display: none !important; } }`}</style>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-card border border-[#315c4d] bg-[#275344] p-5 text-white shadow-sm dark:border-[#345d4c] dark:bg-[#1d4034] sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#f4c95d] text-[#3d351c]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-teal-400/20 bg-teal-400/10 text-accent">
             <Library className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-xl font-bold sm:text-2xl">Book Catalog</h2>
-            <p className="mt-1 text-sm text-white/80">
+            <h2 className="text-xl font-bold text-heading sm:text-2xl">Book Catalog</h2>
+            <p className="mt-0.5 text-sm text-muted">
               Find a title, check its copies, and keep the shelves in order.
             </p>
           </div>
         </div>
 
-        <div className="catalog-no-print flex flex-wrap gap-2">
-          <Button variant="outline" className="border-white/40 text-white hover:bg-white/10" onClick={() => window.print()}>
-            Print catalog
-          </Button>
-          <Button variant="outline" className="border-white/40 text-white hover:bg-white/10" leftIcon={<Plus className="h-4 w-4" />} onClick={handleOpenAddDialog}>
-            Add Title
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          leftIcon={<Plus className="h-4 w-4" />}
+          onClick={handleOpenAddDialog}
+        >
+          Add Title
+        </Button>
+      </div>
+
+      {/* Collection Snapshot */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {collectionStats.map((stat) => (
+          <div
+            key={stat.label}
+            className="flex items-center gap-3 rounded-2xl border border-line bg-panel/60 p-4"
+          >
+            <span
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${stat.tint}`}
+            >
+              <stat.icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
+                {stat.label}
+              </p>
+              <p className="text-lg font-semibold leading-tight text-heading">
+                {stat.value}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Filter Toolbar */}
-      <div className="catalog-no-print grid grid-cols-1 gap-3 rounded-card border border-[#c3d1b7] bg-[#e2ead9] p-4 shadow-sm dark:border-[#3a5142] dark:bg-[#27392f] sm:grid-cols-2 lg:grid-cols-4">
-        <Input
-          placeholder="Search by title, author, ISBN..."
-          leftAddon={<Search className="h-4 w-4" />}
-          value={filters.search || ''}
-          onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-        />
+      <div className="rounded-2xl border border-line bg-panel/60 p-3 sm:p-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <Input
+              placeholder="Search by title, author, ISBN..."
+              leftAddon={<Search className="h-4 w-4" />}
+              value={filters.search || ''}
+              onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+            />
+          </div>
 
-        <Combobox
-          options={[
-            { value: 'all', label: 'All Subjects' },
-            ...(subjects || []).map((s) => ({ value: s.id, label: s.name })),
-          ]}
-          value={filters.subjectId || 'all'}
-          placeholder="All Subjects"
-          searchPlaceholder="Search subjects..."
-          onChange={(value) =>
-            setFilters((prev) => ({
-              ...prev,
-              subjectId: value === 'all' ? undefined : String(value),
-            }))
-          }
-        />
+          <div className="lg:col-span-3">
+            <Combobox
+              options={[
+                { value: 'all', label: 'All Subjects' },
+                ...(subjects || []).map((s) => ({ value: s.id, label: s.name })),
+              ]}
+              value={filters.subjectId || 'all'}
+              placeholder="All Subjects"
+              searchPlaceholder="Search subjects..."
+              createOption={{
+                label: 'Add subject',
+                placeholder: 'New subject name...',
+                onCreate: handleQuickAddSubject,
+              }}
+              onChange={(value) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  subjectId: value === 'all' ? undefined : String(value),
+                }))
+              }
+            />
+          </div>
 
-        <Select
-          options={[
-            { value: 'all', label: 'All Types' },
-            { value: 'textbook', label: 'Textbook' },
-            { value: 'library', label: 'Library Book' },
-            { value: 'reference', label: 'Reference' },
-          ]}
-          value={filters.bookType || 'all'}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              bookType: e.target.value as any,
-            }))
-          }
-        />
+          <div className="lg:col-span-2">
+            <Select
+              options={[
+                { value: 'all', label: 'All Types' },
+                { value: 'textbook', label: 'Textbook' },
+                { value: 'library', label: 'Library Book' },
+                { value: 'reference', label: 'Reference' },
+              ]}
+              value={filters.bookType || 'all'}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  bookType: e.target.value as any,
+                }))
+              }
+            />
+          </div>
 
-        <Select
-          options={[
-            { value: 'all', label: 'All Availability' },
-            { value: 'available', label: 'Only In Stock (> 0)' },
-          ]}
-          value={filters.availability || 'all'}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              availability: e.target.value as any,
-            }))
-          }
-        />
+          <div className="lg:col-span-2">
+            <Select
+              options={[
+                { value: 'all', label: 'All Availability' },
+                { value: 'available', label: 'In Stock Only' },
+              ]}
+              value={filters.availability || 'all'}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  availability: e.target.value as any,
+                }))
+              }
+            />
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+            <p className="text-xs text-faint">
+              <span className="font-semibold text-body">{titles?.length ?? 0}</span>{' '}
+              {titles?.length === 1 ? 'title matches' : 'titles match'} your filters
+            </p>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 text-xs font-medium text-accent transition-colors hover:text-accent"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Titles Table */}
       <DataTable
         data={titles || []}
         columns={columns}
-        compact
         loading={isLoading}
         onRowClick={(row) => navigate(`/catalog/${row.id}`)}
         emptyTitle="No titles match your search"
@@ -387,16 +512,10 @@ export const CatalogPage: React.FC = () => {
         maxWidth="lg"
       >
         <DialogHeader>
-          <DialogTitle>
-            {createdTitleId
-              ? existingTitleSelected ? 'Add Copy to Existing Title' : 'Add First Copy'
-              : 'Add New Title'}
-          </DialogTitle>
+          <DialogTitle>{createdTitleId ? 'Add First Copy' : 'Add New Title'}</DialogTitle>
           <DialogDescription>
             {createdTitleId
-              ? existingTitleSelected
-                ? 'This book is already in your catalog. Add a barcode for another physical copy.'
-                : 'The title is saved. Add a barcode for its first physical copy, or finish without adding one.'
+              ? 'The title is saved. Add a barcode for its first physical copy, or finish without adding one.'
               : 'Enter book details, then add a barcode if you already have a copy ready.'}
           </DialogDescription>
         </DialogHeader>
@@ -406,12 +525,6 @@ export const CatalogPage: React.FC = () => {
             {formError && (
               <div className="rounded-md bg-danger-50 p-3 text-xs text-danger font-medium">
                 {formError}
-              </div>
-            )}
-
-            {existingTitleSelected && (
-              <div className="rounded-md border border-primary-200 bg-primary-50 p-3 text-sm text-primary-900 dark:border-primary-900 dark:bg-primary-950 dark:text-primary-100">
-                Adding a physical copy for <span className="font-semibold">{newTitle.title}</span>
               </div>
             )}
 
@@ -447,78 +560,13 @@ export const CatalogPage: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="relative z-20">
-                <Input
-                  label="Title"
-                  required
-                  value={newTitle.title}
-                  role="combobox"
-                  aria-expanded={showTitleSuggestions && titleSearch.length >= 2}
-                  aria-controls="catalog-title-suggestions"
-                  aria-autocomplete="list"
-                  onFocus={() => setShowTitleSuggestions(true)}
-                  onChange={(e) => {
-                    setNewTitle({ ...newTitle, title: e.target.value })
-                    setShowTitleSuggestions(true)
-                  }}
-                  placeholder="Start typing a book title"
-                />
-                {showTitleSuggestions && titleSearch.length >= 2 && (
-                  <div
-                    id="catalog-title-suggestions"
-                    role="listbox"
-                    aria-label="Matching books already in the catalog"
-                    className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    {titleSuggestions.slice(0, 6).map((title) => (
-                      <button
-                        key={title.id}
-                        type="button"
-                        role="option"
-                        aria-selected="false"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handleSelectExistingTitle(title)}
-                        className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-primary-50 focus:bg-primary-50 focus:outline-none dark:hover:bg-slate-800 dark:focus:bg-slate-800"
-                      >
-                        <span className="relative flex h-12 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800">
-                          <BookOpen className="absolute h-3.5 w-3.5" aria-hidden="true" />
-                          {title.cover_url && (
-                            <img
-                              src={title.cover_url}
-                              alt=""
-                              loading="lazy"
-                              className="absolute inset-0 h-full w-full object-cover"
-                              onError={(event) => { event.currentTarget.style.display = 'none' }}
-                            />
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{title.title}</span>
-                          <span className="mt-0.5 block truncate text-xs text-slate-500">{title.publisher || 'Publisher unavailable'} · {title.subject?.name || 'Subject unavailable'} · Grade {title.grade_level || '—'}</span>
-                        </span>
-                        <span className="shrink-0 text-[11px] font-medium text-slate-500">{title.available_copies_count ?? 0} available</span>
-                      </button>
-                    ))}
-                    {isSearchingTitles && <p className="px-3 py-2 text-xs text-slate-500">Searching your catalog…</p>}
-                    {!isSearchingTitles && titleSuggestions.length === 0 && (
-                      <div className="px-3 py-2">
-                        <p className="text-xs text-slate-600 dark:text-slate-300">No matching title yet. Use AI to suggest the subject, grade and book type from what you’ve entered.</p>
-                        <button
-                          type="button"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => { setShowTitleSuggestions(false); void handleAiSuggest() }}
-                          className="mt-2 text-xs font-semibold text-primary hover:underline"
-                        >
-                          Help complete this title with AI
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {existingTitleSelected && (
-                  <p className="mt-1 text-xs font-medium text-primary-700 dark:text-primary-300">Existing catalog title selected. Add a barcode below to register another copy.</p>
-                )}
-              </div>
+              <Input
+                label="Title"
+                required
+                value={newTitle.title}
+                onChange={(e) => setNewTitle({ ...newTitle, title: e.target.value })}
+                placeholder="e.g. Platinum Mathematics Grade 9"
+              />
 
               <Input
                 label="Author(s)"
@@ -571,6 +619,11 @@ export const CatalogPage: React.FC = () => {
                 value={newTitle.subject_id}
                 placeholder="Select Subject..."
                 searchPlaceholder="Search subjects..."
+                createOption={{
+                  label: 'Add subject',
+                  placeholder: 'New subject name...',
+                  onCreate: handleQuickAddSubject,
+                }}
                 onChange={(value) => setNewTitle({ ...newTitle, subject_id: String(value) })}
               />
 
@@ -598,11 +651,11 @@ export const CatalogPage: React.FC = () => {
               </>
             )}
 
-            <div className="border-t border-slate-200 pt-4 dark:border-slate-700">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                First copy <span className="font-normal text-slate-500">(optional)</span>
+            <div className="border-t border-line pt-4">
+              <p className="text-sm font-semibold text-body">
+                First copy <span className="font-normal text-faint">(optional)</span>
               </p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-xs text-muted">
                 Add a barcode now, or add copies later from the title page.
               </p>
               <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">

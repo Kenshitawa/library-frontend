@@ -112,10 +112,10 @@ export const ReturnsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Returns
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-muted">
             See who has books due, what is overdue and when each return is expected.
           </p>
         </div>
@@ -133,8 +133,8 @@ export const ReturnsPage: React.FC = () => {
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-slate-500">Due next 7 days</p>
-              <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-xs text-faint">Due next 7 days</p>
+              <p className="mt-1 text-xl font-semibold text-heading">
                 {counts.dueSoon}
               </p>
             </div>
@@ -144,7 +144,7 @@ export const ReturnsPage: React.FC = () => {
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-slate-500">Overdue</p>
+              <p className="text-xs text-faint">Overdue</p>
               <p className="mt-1 text-xl font-semibold text-danger">{counts.overdue}</p>
             </div>
             <AlertCircle className="h-5 w-5 text-danger" />
@@ -153,8 +153,8 @@ export const ReturnsPage: React.FC = () => {
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-slate-500">Due later</p>
-              <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-xs text-faint">Due later</p>
+              <p className="mt-1 text-xl font-semibold text-heading">
                 {counts.upcoming}
               </p>
             </div>
@@ -178,7 +178,7 @@ export const ReturnsPage: React.FC = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Books to follow up</CardTitle>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-faint">
                 Updates every minute, including while this page is in the background.
                 {dataUpdatedAt > 0 && (
                   <> Last checked {new Date(dataUpdatedAt).toLocaleTimeString('en-KE', { timeZone: 'Africa/Nairobi' })}.</>
@@ -205,41 +205,41 @@ export const ReturnsPage: React.FC = () => {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <p className="p-5 text-sm text-slate-500">Loading open returns…</p>
+            <p className="p-5 text-sm text-faint">Loading open returns…</p>
           ) : visibleIssues.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+              <p className="text-sm font-medium text-body">
                 {search ? 'No returns match your search.' : 'No books in this return list.'}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-faint">
                 Try another filter or clear the search.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-line">
               {visibleIssues.map((issue) => {
                 const days = daysUntilDue(issue.due_at)
                 return (
                   <Link
                     key={issue.id}
                     to={`/borrowers/${issue.borrower_id}`}
-                    className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <p className="truncate text-sm font-semibold text-heading">
                         {issue.borrower?.name || 'Unknown borrower'}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">
+                      <p className="mt-0.5 truncate text-xs text-faint">
                         {issue.borrower?.class?.name || issue.borrower?.borrower_no || 'No class'}
                         {' · '}
                         {issue.copy?.title?.title || 'Unknown title'}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-400">
+                      <p className="mt-0.5 text-xs text-muted">
                         Barcode {issue.copy?.barcode || 'not recorded'}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
-                      <span className="text-xs text-slate-500">{formatDate(issue.due_at)}</span>
+                      <span className="text-xs text-faint">{formatDate(issue.due_at)}</span>
                       <Badge variant={getDueVariant(days)} size="sm">
                         {getDueLabel(days)}
                       </Badge>
@@ -250,7 +250,7 @@ export const ReturnsPage: React.FC = () => {
             </div>
           )}
           {issues.length === 1000 && (
-            <p className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500 dark:border-slate-800">
+            <p className="border-t border-line px-4 py-3 text-xs text-faint">
               Showing the first 1,000 open loans. Use search to narrow the list.
             </p>
           )}

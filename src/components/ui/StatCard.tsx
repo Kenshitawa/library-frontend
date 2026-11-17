@@ -29,18 +29,18 @@ export const StatCard: React.FC<StatCardProps> = ({
   onClick,
 }) => {
   const colorMap = {
-    primary: 'bg-white/15 text-white',
-    success: 'bg-white/15 text-white',
-    warning: 'bg-white/15 text-white',
-    danger: 'bg-white/15 text-white',
-    info: 'bg-white/15 text-white',
+    primary: 'bg-surface-2 text-heading',
+    success: 'bg-surface-2 text-heading',
+    warning: 'bg-surface-2 text-heading',
+    danger: 'bg-surface-2 text-heading',
+    info: 'bg-surface-2 text-heading',
   }
   const surfaceMap = {
-    primary: 'border-[#176557] bg-[#176557] dark:border-[#10473f] dark:bg-[#10473f]',
-    success: 'border-[#376e35] bg-[#376e35] dark:border-[#244b2c] dark:bg-[#244b2c]',
-    warning: 'border-[#8a5a00] bg-[#8a5a00] dark:border-[#654400] dark:bg-[#654400]',
-    danger: 'border-[#9a3029] bg-[#9a3029] dark:border-[#74251f] dark:bg-[#74251f]',
-    info: 'border-[#286878] bg-[#286878] dark:border-[#1d4e5a] dark:bg-[#1d4e5a]',
+    primary: 'border-accent/20 bg-accent/[0.07]',
+    success: 'border-positive/20 bg-positive/[0.07]',
+    warning: 'border-caution/25 bg-caution/[0.08]',
+    danger: 'border-negative/20 bg-negative/[0.07]',
+    info: 'border-sky-accent/20 bg-sky-accent/[0.07]',
   }
 
   return (
@@ -50,7 +50,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       className={cn('p-5 flex flex-col justify-between', surfaceMap[color], onClick && 'cursor-pointer', className)}
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-white/90">
+        <span className="text-sm font-semibold text-heading/90">
           {label}
         </span>
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg', colorMap[color])}>
@@ -59,17 +59,17 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
 
       <div className="mt-4">
-        <div className="text-2xl font-bold tracking-tight text-white">
+        <div className="text-2xl font-bold tracking-tight text-heading">
           {value}
         </div>
 
         {(trend || description) && (
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-white/85">
+          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-heading/85">
             {trend && (
               <span
                 className={cn(
                   'inline-flex items-center font-medium',
-                  'text-white'
+                  'text-heading'
                 )}
               >
                 {trend.positive ? (

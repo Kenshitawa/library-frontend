@@ -137,10 +137,10 @@ export const UsersPage: React.FC = () => {
       sortable: true,
       accessor: (row) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="font-semibold text-heading">
             {row.name}
           </span>
-          <span className="text-xs text-slate-400">{row.email}</span>
+          <span className="text-xs text-muted">{row.email}</span>
         </div>
       ),
     },
@@ -168,7 +168,7 @@ export const UsersPage: React.FC = () => {
       key: 'created_at',
       header: 'Created On',
       accessor: (row) => (
-        <span className="text-xs text-slate-500">{formatDate(row.created_at)}</span>
+        <span className="text-xs text-faint">{formatDate(row.created_at)}</span>
       ),
     },
   ]
@@ -178,10 +178,10 @@ export const UsersPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Staff & Teacher Accounts
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Manage authorized staff logins, teacher portal access, and role permissions
           </p>
         </div>

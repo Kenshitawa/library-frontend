@@ -63,10 +63,10 @@ export const Stepper: React.FC<StepperProps> = ({
                     className={cn(
                       'relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors',
                       isCompleted
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-heading'
                         : isCurrent
                         ? 'border-2 border-primary bg-white text-primary dark:bg-slate-900 dark:text-primary-400'
-                        : 'border-2 border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                        : 'border-2 border-slate-300 bg-white text-faint dark:border-slate-700 dark:bg-slate-900 dark:text-muted'
                     )}
                   >
                     {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
@@ -79,14 +79,14 @@ export const Stepper: React.FC<StepperProps> = ({
                       isCurrent
                         ? 'text-primary dark:text-primary-400'
                         : isCompleted
-                        ? 'text-slate-900 dark:text-slate-100'
-                        : 'text-slate-400'
+                        ? 'text-heading'
+                        : 'text-muted'
                     )}
                   >
                     {step.title}
                   </span>
                   {step.description && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:inline">
+                    <span className="text-xs text-muted truncate hidden sm:inline">
                       {step.description}
                     </span>
                   )}

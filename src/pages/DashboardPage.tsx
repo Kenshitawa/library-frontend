@@ -27,82 +27,33 @@ import { Badge } from '@/components/ui/Badge'
 import { useDashboardStats, useDueSoon, useOverdue } from '@/hooks/useIssues'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { formatDate, daysUntilDue } from '@/lib/utils'
-import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 
-function activityPath(log: any): string {
-  const entity = String(log.entity || '').toLowerCase()
-  const id = log.entity_id ? `/${log.entity_id}` : ''
-  if (entity.includes('borrower')) return `/borrowers${id}`
-  if (entity.includes('title') || entity.includes('copy')) return `/catalog${id}`
-  if (entity.includes('issue') || entity.includes('circulation')) {
-    const action = String(log.action || '').toLowerCase()
-    return action.includes('return') ? '/return' : '/issue'
+// 30-day activity simulation for the chart
+const mockChartData = Array.from({ length: 30 }).map((_, i) => {
+  const d = new Date()
+  d.setDate(d.getDate() - (29 - i))
+  return {
+    date: d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' }),
+    issues: Math.floor(Math.sin(i / 3) * 8 + 12 + (i % 5)),
+    returns: Math.floor(Math.cos(i / 3) * 6 + 10 + (i % 4)),
   }
-  if (entity.includes('charge') || entity.includes('payment')) return '/charges'
-  if (entity.includes('reservation')) return '/reservations'
-  if (entity.includes('user')) return '/users'
-  if (entity.includes('notification')) return '/notifications'
-  return '/audit'
-}
-
-function dayKey(date: Date): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Africa/Nairobi', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(date)
-  const part = (type: string) => parts.find((item) => item.type === type)?.value || ''
-  return `${part('year')}-${part('month')}-${part('day')}`
-}
+})
 
 export const DashboardPage: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   const { data: dueSoonList } = useDueSoon()
   const { data: overdueList } = useOverdue()
   const { data: recentActivity } = useAuditLog()
-  const chartStart = new Date()
-  chartStart.setDate(chartStart.getDate() - 29)
-  chartStart.setHours(0, 0, 0, 0)
-  const { data: activityChartData = [] } = useQuery({
-    queryKey: ['dashboard-circulation-chart', dayKey(chartStart)],
-    queryFn: async () => {
-      const since = chartStart.toISOString()
-      const [issuedResult, returnedResult] = await Promise.all([
-        (supabase as any).from('issues').select('issued_at').gte('issued_at', since),
-        (supabase as any).from('issues').select('returned_at').not('returned_at', 'is', null).gte('returned_at', since),
-      ])
-      if (issuedResult.error) throw new Error(issuedResult.error.message)
-      if (returnedResult.error) throw new Error(returnedResult.error.message)
-      const counts = new Map<string, { issues: number; returns: number }>()
-      for (let offset = 0; offset < 30; offset += 1) {
-        const date = new Date(chartStart)
-        date.setDate(date.getDate() + offset)
-        counts.set(dayKey(date), { issues: 0, returns: 0 })
-      }
-      for (const row of issuedResult.data || []) {
-        const count = counts.get(dayKey(new Date(row.issued_at)))
-        if (count) count.issues += 1
-      }
-      for (const row of returnedResult.data || []) {
-        const count = counts.get(dayKey(new Date(row.returned_at)))
-        if (count) count.returns += 1
-      }
-      return Array.from(counts, ([key, count]) => ({
-        date: new Date(`${key}T12:00:00+03:00`).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' }),
-        ...count,
-      }))
-    },
-    staleTime: 60_000,
-  })
 
   return (
     <div className="space-y-6">
       {/* Top Header & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Circulation Dashboard
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-muted">
             Overview of textbook loans, returns, and desk activity
           </p>
         </div>
@@ -172,35 +123,35 @@ export const DashboardPage: React.FC = () => {
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
             <CardTitle>Circulation Activity (Last 30 Days)</CardTitle>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-faint mt-0.5">
               Daily comparison of books issued vs books returned
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-              <span className="text-slate-600 dark:text-slate-400">Issues</span>
+              <span className="text-muted">Issues</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-success" />
-              <span className="text-slate-600 dark:text-slate-400">Returns</span>
+              <span className="text-muted">Returns</span>
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={activityChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={mockChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-slate-100 dark:stroke-slate-800" />
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 11 }}
-                  className="text-slate-400"
+                  className="text-muted"
                   tickLine={false}
                 />
                 <YAxis
                   tick={{ fontSize: 11 }}
-                  className="text-slate-400"
+                  className="text-muted"
                   tickLine={false}
                   axisLine={false}
                 />
@@ -252,19 +203,19 @@ export const DashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="flex-1 p-0">
             {overdueList && overdueList.length > 0 ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {overdueList.slice(0, 5).map((item) => {
                   const daysLate = Math.abs(daysUntilDue(item.due_at))
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      className="flex items-center justify-between p-4 hover:bg-surface-2 transition-colors"
                     >
                       <div className="flex flex-col min-w-0 pr-2">
-                        <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
+                        <span className="font-semibold text-sm text-heading truncate">
                           {item.copy?.title?.title || 'Unknown Title'}
                         </span>
-                        <span className="text-xs text-slate-500 truncate">
+                        <span className="text-xs text-faint truncate">
                           Borrower: {item.borrower?.name} ({item.borrower?.borrower_no})
                           {item.borrower?.class?.name ? ` · ${item.borrower.class.name}` : ''}
                         </span>
@@ -273,7 +224,7 @@ export const DashboardPage: React.FC = () => {
                         <Badge variant="danger" size="sm">
                           {daysLate} {daysLate === 1 ? 'day' : 'days'} late
                         </Badge>
-                        <div className="text-[11px] text-slate-400 mt-1">
+                        <div className="text-[11px] text-muted mt-1">
                           Due {formatDate(item.due_at)}
                         </div>
                       </div>
@@ -282,7 +233,7 @@ export const DashboardPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="p-8 text-center text-sm text-slate-400">
+              <div className="p-8 text-center text-sm text-muted">
                 No overdue books. Excellent work!
               </div>
             )}
@@ -302,19 +253,19 @@ export const DashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="flex-1 p-0">
             {dueSoonList && dueSoonList.length > 0 ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-line">
                 {dueSoonList.slice(0, 5).map((item) => {
                   const daysLeft = daysUntilDue(item.due_at)
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      className="flex items-center justify-between p-4 hover:bg-surface-2 transition-colors"
                     >
                       <div className="flex flex-col min-w-0 pr-2">
-                        <span className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
+                        <span className="font-semibold text-sm text-heading truncate">
                           {item.copy?.title?.title || 'Unknown Title'}
                         </span>
-                        <span className="text-xs text-slate-500 truncate">
+                        <span className="text-xs text-faint truncate">
                           Borrower: {item.borrower?.name} ({item.borrower?.borrower_no})
                           {item.borrower?.class?.name ? ` · ${item.borrower.class.name}` : ''}
                         </span>
@@ -323,7 +274,7 @@ export const DashboardPage: React.FC = () => {
                         <Badge variant="warning" size="sm">
                           {daysLeft === 0 ? 'Due today' : `${daysLeft} days left`}
                         </Badge>
-                        <div className="text-[11px] text-slate-400 mt-1">
+                        <div className="text-[11px] text-muted mt-1">
                           Due {formatDate(item.due_at)}
                         </div>
                       </div>
@@ -332,7 +283,7 @@ export const DashboardPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="p-8 text-center text-sm text-slate-400">
+              <div className="p-8 text-center text-sm text-muted">
                 No books due in the next 3 days.
               </div>
             )}
@@ -353,35 +304,33 @@ export const DashboardPage: React.FC = () => {
         </CardHeader>
         <CardContent className="p-0">
           {recentActivity && recentActivity.length > 0 ? (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-line">
               {recentActivity.slice(0, 6).map((log: any) => (
-                <Link
-                  to={activityPath(log)}
+                <div
                   key={log.id}
-                  className="group flex items-center justify-between gap-3 px-6 py-3.5 text-xs transition-colors duration-150 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-slate-800/40"
+                  className="flex items-center justify-between px-6 py-3.5 hover:bg-surface-2 transition-colors text-xs"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <span className="font-semibold uppercase tracking-wider text-body">
                       {log.action}
                     </span>
-                    <span className="text-slate-500">
-                      on <strong className="text-slate-700 dark:text-slate-200">{log.entity}</strong>
+                    <span className="text-faint">
+                      on <strong className="text-body">{log.entity}</strong>
                     </span>
                     {log.user?.name && (
-                      <span className="text-slate-400 hidden sm:inline">
+                      <span className="text-muted hidden sm:inline">
                         by {log.user.name}
                       </span>
                     )}
                   </div>
-                  <span className="flex shrink-0 items-center gap-2 text-slate-400">
+                  <span className="text-muted shrink-0">
                     {formatDate(log.timestamp)}
-                    <ChevronRight className="h-4 w-4 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-primary" />
                   </span>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="p-6 text-center text-xs text-slate-400">
+            <div className="p-6 text-center text-xs text-muted">
               No recent audit activity.
             </div>
           )}

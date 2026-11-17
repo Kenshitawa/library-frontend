@@ -1,14 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   Barcode,
-  ArrowLeftCircle,
+  Search,
   CheckCircle,
   AlertCircle,
-  AlertTriangle,
   BookOpen,
   User,
   Clock,
-  Sparkles,
+  Loader2,
   Download,
   Printer,
 } from 'lucide-react'
@@ -19,9 +20,8 @@ import { Select } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useReturnCopy } from '@/hooks/useIssues'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { Issue, Copy, CopyCondition } from '@/types'
+import type { Issue, Copy, CopyCondition, Title, Borrower, ClassGroup } from '@/types'
 import { formatDate, daysUntilDue } from '@/lib/utils'
 import { useLibraryProfile } from '@/hooks/useLibraryProfile'
 import { downloadCirculationReceipt, printCirculationReceipt } from '@/lib/circulationReceipt'
@@ -52,6 +52,24 @@ function playSound(type: 'success' | 'error') {
   } catch (err) {}
 }
 
+function normalize(value: string | null | undefined): string {
+  return (value || '').toLowerCase().trim()
+}
+
+function authorNames(loan: OpenLoan): string {
+  const authors = (loan.copy?.title as any)?.title_authors
+  if (!Array.isArray(authors)) return ''
+  return authors
+    .map((link: any) => link?.author?.name)
+    .filter((name: string | null | undefined): name is string => !!name)
+    .join(', ')
+}
+
+type OpenLoan = Issue & {
+  copy?: (Copy & { title?: (Title & { title_authors?: any[] }) | null }) | null
+  borrower?: (Borrower & { class?: ClassGroup | null }) | null
+}
+
 interface ReturnedSessionItem {
   issue: Issue
   returnedAt: string
@@ -64,129 +82,154 @@ export const ReturnDesk: React.FC = () => {
   const { user, profile } = useAuth()
   const { profile: libraryProfile } = useLibraryProfile()
   const returnCopy = useReturnCopy()
-  const queryClient = useQueryClient()
   const scanInputRef = useRef<HTMLInputElement>(null)
-  const { data: recentReturns = [] } = useQuery({
-    queryKey: ['recent-circulation', 'returned'],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('issues')
-        .select('id, returned_at, borrower:borrowers(id, name, borrower_no), copy:copies(title:titles(title))')
-        .not('returned_at', 'is', null)
-        .order('returned_at', { ascending: false })
-        .limit(3)
-      if (error) throw new Error(error.message)
-      return data || []
-    },
-    staleTime: 30_000,
-  })
 
   const [scanQuery, setScanQuery] = useState('')
-  const [currentIssue, setCurrentIssue] = useState<Issue | null>(null)
+  const [showMatches, setShowMatches] = useState(false)
+  const [activeMatch, setActiveMatch] = useState(-1)
+  const [currentIssue, setCurrentIssue] = useState<OpenLoan | null>(null)
   const [returnCondition, setReturnCondition] = useState<CopyCondition>('good')
   const [damageNote, setDamageNote] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isLookingUp, setIsLookingUp] = useState(false)
   const [sessionReturns, setSessionReturns] = useState<ReturnedSessionItem[]>([])
-  const [deskMessage, setDeskMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [matchingTitles, setMatchingTitles] = useState<Array<{ id: string; title: string }>>([])
+  const [deskMessage, setDeskMessage] = useState<{ type: 'error'; text: string } | null>(null)
+
+  const { data: openLoans = [], isLoading: loadingLoans } = useQuery({
+    queryKey: ['issues', 'return-desk-open'],
+    queryFn: async (): Promise<OpenLoan[]> => {
+      const pageSize = 1000
+      const loans: OpenLoan[] = []
+
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await (supabase as any)
+          .from('issues')
+          .select(`
+            *,
+            borrower:borrowers(*, class:classes(*)),
+            copy:copies(*, title:titles(*, title_authors(author:authors(name))))
+          `)
+          .eq('status', 'open')
+          .order('due_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(offset, offset + pageSize - 1)
+
+        if (error) throw new Error(error.message)
+        const page = (data || []) as OpenLoan[]
+        loans.push(...page)
+        if (page.length < pageSize) break
+      }
+
+      return loans
+    },
+    staleTime: 15_000,
+  })
 
   useEffect(() => {
     scanInputRef.current?.focus()
   }, [])
 
-  useEffect(() => {
-    if (scanQuery.trim().length < 2) {
-      setMatchingTitles([])
-      return
-    }
-    const timer = window.setTimeout(async () => {
-      const { data } = await (supabase as any)
-        .from('titles')
-        .select('id, title')
-        .ilike('title', `%${scanQuery.trim()}%`)
-        .limit(8)
-      setMatchingTitles(data || [])
-    }, 180)
-    return () => window.clearTimeout(timer)
-  }, [scanQuery])
+  const matches = useMemo(() => {
+    const query = normalize(scanQuery)
+    if (query.length < 2) return []
+
+    const tokens = query.split(/\s+/).filter(Boolean)
+
+    return openLoans
+      .map((loan) => {
+        const title = normalize(loan.copy?.title?.title)
+        const subtitle = normalize(loan.copy?.title?.subtitle)
+        const publisher = normalize(loan.copy?.title?.publisher)
+        const barcode = normalize(loan.copy?.barcode)
+        const borrower = normalize(loan.borrower?.name)
+        const borrowerNo = normalize(loan.borrower?.borrower_no)
+        const className = normalize(loan.borrower?.class?.name)
+        const authors = normalize(authorNames(loan))
+        const haystack = [title, subtitle, publisher, barcode, borrower, borrowerNo, className, authors].join(' ')
+
+        if (!tokens.every((token) => haystack.includes(token))) return null
+
+        let score = 0
+        if (barcode === query) score += 120
+        if (barcode.startsWith(query)) score += 60
+        if (title.startsWith(query)) score += 50
+        if (borrower.startsWith(query)) score += 45
+        if (borrowerNo.startsWith(query)) score += 40
+        if (authors.includes(query)) score += 20
+        if (title.includes(query)) score += 15
+
+        return { loan, score }
+      })
+      .filter((entry): entry is { loan: OpenLoan; score: number } => entry !== null)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((entry) => entry.loan)
+  }, [openLoans, scanQuery])
+
+  const learnerOpenCount = currentIssue
+    ? openLoans.filter((loan) => loan.borrower?.id === currentIssue.borrower?.id).length
+    : 0
+
+  const resetSearch = () => {
+    setScanQuery('')
+    setShowMatches(false)
+    setActiveMatch(-1)
+  }
+
+  const selectLoan = (loan: OpenLoan) => {
+    setCurrentIssue(loan)
+    setReturnCondition((loan.condition_at_issue as CopyCondition) || 'good')
+    setDamageNote('')
+    setDeskMessage(null)
+    resetSearch()
+    playSound('success')
+    toast.success(`Ready to return: ${loan.copy?.title?.title || 'Book'}`, {
+      description: `${loan.borrower?.name || 'Learner'} • barcode ${loan.copy?.barcode || '—'}`,
+      duration: 3000,
+    })
+    window.setTimeout(() => scanInputRef.current?.focus(), 0)
+  }
+
+  const findLoanForBarcode = (barcode: string): OpenLoan | undefined =>
+    openLoans.find((loan) => normalize(loan.copy?.barcode) === normalize(barcode))
 
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const query = scanQuery.trim()
     if (!query) return
     setDeskMessage(null)
+    setShowMatches(false)
 
+    if (currentIssue) {
+      setDeskMessage({
+        type: 'error',
+        text: 'Finish checking in the current item before scanning the next one.',
+      })
+      return
+    }
+
+    // Enter on a highlighted/typed search result picks the best loan match.
+    if (activeMatch >= 0 && matches[activeMatch]) {
+      selectLoan(matches[activeMatch])
+      return
+    }
+
+    setIsLookingUp(true)
     try {
-      // 1. Look up copy by barcode
-      let { data: copyData } = await (supabase as any)
-        .from('copies')
-        .select(`
-          *,
-          title:titles(*)
-        `)
-        .eq('barcode', query)
-        .maybeSingle()
-
-      // Staff may use a title when a barcode is damaged or unavailable.
-      let matchedBookTitle = false
-      if (!copyData) {
-        const { data: titles } = await (supabase as any)
-          .from('titles')
-          .select('id')
-          .ilike('title', `%${query}%`)
-          .limit(10)
-        matchedBookTitle = Boolean(titles?.length)
-        const titleIds = (titles || []).map((title: any) => title.id)
-        if (titleIds.length) {
-          const { data: copies } = await (supabase as any)
-            .from('copies')
-            .select('id')
-            .in('title_id', titleIds)
-          const copyIds = (copies || []).map((copy: any) => copy.id)
-          if (copyIds.length) {
-            const { data: issueByTitle } = await (supabase as any)
-              .from('issues')
-              .select(`*, copy:copies(*, title:titles(*)), borrower:borrowers(*, class:classes(*))`)
-              .in('copy_id', copyIds)
-              .eq('status', 'open')
-              .order('issued_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
-            if (issueByTitle) {
-              setCurrentIssue(issueByTitle as Issue)
-              setReturnCondition(((issueByTitle as any).condition_at_issue as CopyCondition) || 'good')
-              setDamageNote('')
-              playSound('success')
-              setScanQuery('')
-              return
-            }
-          }
-        }
-      }
-
-      if (!copyData) {
-        playSound('error')
-        setDeskMessage({
-          type: 'error',
-          text: matchedBookTitle ? `No active loan found for "${query}".` : `Barcode or book title "${query}" not found in catalog.`,
-        })
-        setScanQuery('')
+      const knownLoan = findLoanForBarcode(query)
+      if (knownLoan) {
+        selectLoan(knownLoan)
         return
       }
 
-      // 2. Look up open issue for this copy
-      const { data: issueData } = await (supabase as any)
-        .from('issues')
-        .select(`
-          *,
-          copy:copies(*, title:titles(*)),
-          borrower:borrowers(*, class:classes(*))
-        `)
-        .eq('copy_id', (copyData as any).id)
-        .eq('status', 'open')
+      // Exact barcode may be a copy that is not currently on loan.
+      const { data: copyData } = await (supabase as any)
+        .from('copies')
+        .select('*, title:titles(*)')
+        .eq('barcode', query)
         .maybeSingle()
 
-      if (!issueData) {
+      if (copyData) {
         playSound('error')
         setDeskMessage({
           type: 'error',
@@ -196,23 +239,53 @@ export const ReturnDesk: React.FC = () => {
         return
       }
 
-      // Found active loan!
-      setCurrentIssue(issueData as Issue)
-      setReturnCondition(((issueData as any).condition_at_issue as CopyCondition) || 'good')
-      setDamageNote('')
-      playSound('success')
+      if (matches.length > 0) {
+        selectLoan(matches[0])
+        return
+      }
+
+      playSound('error')
+      setDeskMessage({
+        type: 'error',
+        text: `No open loan matched "${query}". Try a learner name, book title, author or barcode.`,
+      })
       setScanQuery('')
     } catch (err: any) {
       playSound('error')
       setDeskMessage({ type: 'error', text: err?.message || 'Error processing return scan.' })
     } finally {
+      setIsLookingUp(false)
       scanInputRef.current?.focus()
+    }
+  }
+
+  const handleScanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setShowMatches(true)
+      setActiveMatch((prev) => Math.min(prev + 1, matches.length - 1))
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveMatch((prev) => Math.max(prev - 1, 0))
+      return
+    }
+    if (e.key === 'Escape') {
+      setShowMatches(false)
+      setActiveMatch(-1)
+      return
+    }
+    if (e.key === 'Enter' && showMatches && activeMatch >= 0 && matches[activeMatch]) {
+      e.preventDefault()
+      selectLoan(matches[activeMatch])
     }
   }
 
   const handleConfirmReturn = async () => {
     if (!currentIssue) return
     setIsProcessing(true)
+    setDeskMessage(null)
 
     try {
       const days = daysUntilDue(currentIssue.due_at)
@@ -227,16 +300,10 @@ export const ReturnDesk: React.FC = () => {
         returnNote: damageNote.trim() || undefined,
       })
 
-      // If damaged, record flag
-      if (returnCondition === 'damaged' || returnCondition === 'poor') {
-        // Damage recorded!
-      }
-
       playSound('success')
-      await queryClient.invalidateQueries({ queryKey: ['recent-circulation', 'returned'] })
-      setDeskMessage({
-        type: 'success',
-        text: `Successfully checked in "${currentIssue.copy?.title?.title}" from ${currentIssue.borrower?.name}!`,
+      toast.success(`Checked in "${currentIssue.copy?.title?.title}"`, {
+        description: `Returned by ${currentIssue.borrower?.name || 'learner'}${isLate ? ` • ${daysLate} day(s) late` : ' • on time'}`,
+        duration: 4000,
       })
 
       setSessionReturns((prev) => [
@@ -294,84 +361,134 @@ export const ReturnDesk: React.FC = () => {
 
   const days = currentIssue ? daysUntilDue(currentIssue.due_at) : 0
   const isLate = days < 0
+  const matchOpen = showMatches && scanQuery.trim().length >= 2
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
-            Return Desk
-          </h2>
-          <p className="text-xs text-slate-500">
-            Scan returned textbook barcode, assess physical condition, and check in
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">Return Desk</h2>
+          <p className="text-xs text-faint">
+            Scan a barcode or search by learner, book title or author to check items in.
           </p>
         </div>
 
-        <div className="text-xs font-semibold text-slate-500">
+        <div className="text-xs font-semibold text-faint">
           Session Check-ins: <span className="text-primary font-bold">{sessionReturns.length}</span>
         </div>
       </div>
 
-      {/* Barcode Scanner Bar */}
+      {/* Barcode / search bar */}
       <Card className="border-2 border-primary/40 shadow-md">
         <CardContent className="p-4 sm:p-5">
           <form onSubmit={handleScanSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <input
-                list="return-book-title-suggestions"
                 ref={scanInputRef}
                 type="text"
                 value={scanQuery}
-                onChange={(e) => setScanQuery(e.target.value)}
-                placeholder="Scan barcode or type the book title…"
-                className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-slate-50 dark:bg-slate-900 px-4 py-3 pl-12 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+                onChange={(e) => {
+                  setScanQuery(e.target.value)
+                  setShowMatches(true)
+                  setActiveMatch(-1)
+                }}
+                onFocus={() => {
+                  if (scanQuery.trim().length >= 2) setShowMatches(true)
+                }}
+                onBlur={() => window.setTimeout(() => setShowMatches(false), 120)}
+                onKeyDown={handleScanKeyDown}
+                placeholder="Scan barcode or search learner / book / author..."
+                className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-surface-1 px-4 py-3 pl-12 pr-10 text-heading placeholder:text-muted focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
                 autoComplete="off"
+                role="combobox"
+                aria-expanded={matchOpen}
+                aria-autocomplete="list"
               />
-              <datalist id="return-book-title-suggestions">
-                {matchingTitles.map((title) => <option key={title.id} value={title.title} />)}
-              </datalist>
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary pointer-events-none" />
+              <Search className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted pointer-events-none" />
+
+              {matchOpen && (
+                <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-xl border border-line bg-panel text-left shadow-[0_22px_60px_-30px_rgba(0,0,0,0.8)]">
+                  {loadingLoans || isLookingUp ? (
+                    <div className="flex items-center gap-2 p-3 text-xs text-muted">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Searching open loans…
+                    </div>
+                  ) : matches.length === 0 ? (
+                    <div className="p-3 text-xs text-muted">
+                      No open loan matches. Press Enter to scan the exact barcode.
+                    </div>
+                  ) : (
+                    <ul className="max-h-80 overflow-y-auto p-1">
+                      {matches.map((loan, index) => {
+                        const author = authorNames(loan)
+                        const overdue = new Date(loan.due_at).getTime() < Date.now()
+                        return (
+                          <li key={loan.id}>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => selectLoan(loan)}
+                              className={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                                activeMatch === index ? 'bg-surface-2' : 'hover:bg-surface-2'
+                              }`}
+                            >
+                              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface-1 text-primary">
+                                <BookOpen className="h-4 w-4" />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium text-heading">
+                                  {loan.copy?.title?.title || 'Unknown title'}
+                                </span>
+                                <span className="block truncate text-[11px] text-muted">
+                                  {[author || 'Unknown author', `Barcode ${loan.copy?.barcode || '—'}`]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </span>
+                                <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-semibold text-body">
+                                  <User className="h-3 w-3 text-faint" />
+                                  {loan.borrower?.name || 'Unknown learner'}
+                                  {loan.borrower?.class?.name ? (
+                                    <span className="font-normal text-faint">
+                                      · {loan.borrower.class.name}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </span>
+                              <span
+                                className={`mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide ${
+                                  overdue ? 'text-danger' : 'text-faint'
+                                }`}
+                              >
+                                {overdue ? 'Overdue' : `Due ${formatDate(loan.due_at)}`}
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
-            <Button type="submit" variant="primary" className="px-6 text-base">
+            <Button type="submit" variant="primary" className="px-6 text-base" loading={isLookingUp}>
               Check In
             </Button>
           </form>
 
           {deskMessage && (
             <div
-              className={`mt-3 flex items-center gap-2 rounded-md p-3 text-xs font-semibold ${
-                deskMessage.type === 'success'
-                  ? 'bg-success-50 text-success-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                  : 'bg-danger-50 text-danger dark:bg-red-950/60 dark:text-red-300'
-              }`}
+              className="mt-3 flex items-center gap-2 rounded-md p-3 text-xs font-semibold bg-danger-50 text-danger dark:bg-red-950/60 dark:text-red-300"
+              role="alert"
             >
-              {deskMessage.type === 'success' ? (
-                <CheckCircle className="h-4 w-4 shrink-0" />
-              ) : (
-                <AlertCircle className="h-4 w-4 shrink-0" />
-              )}
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{deskMessage.text}</span>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-success" /><CardTitle className="text-sm">Latest book returns</CardTitle></div>
-          <span className="text-xs text-slate-500">Last 3</span>
-        </CardHeader>
-        <CardContent className="grid gap-2 p-3 sm:grid-cols-3">
-          {recentReturns.length ? recentReturns.map((item: any) => (
-            <div key={item.id} className="min-w-0 rounded-xl border border-slate-200/80 bg-white/60 p-3 dark:border-slate-700 dark:bg-slate-900/30">
-              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{item.borrower?.name || 'Borrower'}</p>
-              <p className="mt-1 truncate text-xs text-slate-500">{item.copy?.title?.title || 'Book title'} · {item.borrower?.borrower_no || ''}</p>
-            </div>
-          )) : <p className="px-2 py-3 text-sm text-slate-500 sm:col-span-3">No books returned yet.</p>}
-        </CardContent>
-      </Card>
-
-      {/* Main Panel: Current Scanned Item Inspection & Condition */}
+      {/* Selected loan verification */}
       {currentIssue && (
         <Card className="border-2 border-primary animate-in fade-in zoom-in-95">
           <CardHeader className="bg-primary-50/50 dark:bg-primary-950/30 pb-3">
@@ -395,24 +512,58 @@ export const ReturnDesk: React.FC = () => {
 
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Item Info */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  {currentIssue.copy?.title?.title}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Author: <strong>{currentIssue.copy?.title?.author}</strong>
-                </p>
-                <div className="pt-2 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                  <div>Barcode: <span className="font-mono font-semibold">{currentIssue.copy?.barcode}</span></div>
-                  <div>Issued to: <strong className="text-slate-900 dark:text-slate-100">{currentIssue.borrower?.name}</strong> (#{currentIssue.borrower?.borrower_no})</div>
+              {/* Item + learner info */}
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-faint">
+                    Book
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-heading">
+                    {currentIssue.copy?.title?.title}
+                  </h3>
+                  <p className="text-xs text-faint">
+                    Author: <strong>{authorNames(currentIssue) || currentIssue.copy?.title?.author || 'Unknown'}</strong>
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-line bg-surface-1 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 text-sm font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300">
+                      {currentIssue.borrower?.name?.charAt(0) || '?'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-faint">
+                        Learner
+                      </p>
+                      <p className="truncate text-sm font-bold text-heading">
+                        {currentIssue.borrower?.name || 'Unknown learner'}
+                      </p>
+                      <p className="text-[11px] text-muted">
+                        {[currentIssue.borrower?.borrower_no, currentIssue.borrower?.class?.name]
+                          .filter(Boolean)
+                          .join(' · ') || '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-2 border-t border-line pt-2 text-[11px] text-muted">
+                    {learnerOpenCount} open loan{learnerOpenCount === 1 ? '' : 's'} on this learner's account
+                  </p>
+                </div>
+
+                <div className="space-y-1 text-xs text-muted">
+                  <div>
+                    Barcode: <span className="font-mono font-semibold text-heading">{currentIssue.copy?.barcode}</span>
+                  </div>
                   <div>Issued on: {formatDate(currentIssue.issued_at)}</div>
-                  <div>Due date: {formatDate(currentIssue.due_at)}</div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-faint" />
+                    Due date: {formatDate(currentIssue.due_at)}
+                  </div>
                 </div>
               </div>
 
-              {/* Condition & Damage Evaluation */}
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-lg">
+              {/* Condition & damage evaluation */}
+              <div className="space-y-3 bg-surface-1 p-4 rounded-lg">
                 <Select
                   label="Condition on Return"
                   options={[
@@ -450,7 +601,7 @@ export const ReturnDesk: React.FC = () => {
         </Card>
       )}
 
-      {/* Running Session Returns List */}
+      {/* Running session returns */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
@@ -460,21 +611,21 @@ export const ReturnDesk: React.FC = () => {
         </CardHeader>
         <CardContent className="p-0">
           {sessionReturns.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400">
+            <div className="p-8 text-center text-xs text-muted">
               No items returned yet in this session.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-line">
               {sessionReturns.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-xs transition-colors"
+                  className="flex items-center justify-between p-4 hover:bg-surface-2 text-xs transition-colors"
                 >
                   <div className="flex flex-col min-w-0 pr-3">
-                    <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <span className="font-semibold text-heading truncate">
                       {item.issue.copy?.title?.title}
                     </span>
-                    <span className="text-slate-500">
+                    <span className="text-faint">
                       from {item.issue.borrower?.name} (#{item.issue.copy?.barcode})
                     </span>
                   </div>

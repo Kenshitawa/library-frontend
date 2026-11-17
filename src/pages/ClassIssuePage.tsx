@@ -133,10 +133,10 @@ export const ClassIssuePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Class Bulk Issuing
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted">
             Rapidly issue textbooks or class readers to all learners in a class in a single transaction
           </p>
         </div>
@@ -163,7 +163,7 @@ export const ClassIssuePage: React.FC = () => {
       <Card>
         <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Select Class
             </label>
             <Select
@@ -185,7 +185,7 @@ export const ClassIssuePage: React.FC = () => {
 
           {issueMode === 'single' ? (
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
                 Select Title
               </label>
               <Select
@@ -206,7 +206,7 @@ export const ClassIssuePage: React.FC = () => {
             </div>
           ) : (
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
                 Subject Filter
               </label>
               <Select
@@ -226,7 +226,7 @@ export const ClassIssuePage: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               Loan Period (Days)
             </label>
             <Select
@@ -247,16 +247,16 @@ export const ClassIssuePage: React.FC = () => {
 
       {/* Stock Availability Pill */}
       {selectedTitleId && (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-panel p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h4 className="font-semibold text-heading">
                 {selectedTitle?.title}
               </h4>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-faint">
                 Subject: {selectedTitle?.subject?.name || 'General'} | ISBN:{' '}
                 {selectedTitle?.isbn13 || selectedTitle?.isbn10 || 'N/A'}
               </p>
@@ -265,7 +265,7 @@ export const ClassIssuePage: React.FC = () => {
 
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <span className="text-xs text-slate-500">Available Copies:</span>
+              <span className="text-xs text-faint">Available Copies:</span>
               <div
                 className={`text-lg font-bold ${
                   availableCopies >= selectedLearnerIds.size ? 'text-success' : 'text-danger'
@@ -276,7 +276,7 @@ export const ClassIssuePage: React.FC = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-slate-500">Selected Learners:</span>
+              <span className="text-xs text-faint">Selected Learners:</span>
               <div className="text-lg font-bold text-primary">{selectedLearnerIds.size}</div>
             </div>
           </div>
@@ -292,7 +292,7 @@ export const ClassIssuePage: React.FC = () => {
               <h4 className="font-semibold text-success-700 dark:text-success-400">
                 Bulk Issuing Complete
               </h4>
-              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+              <p className="text-sm text-body mt-1">
                 Successfully issued to <strong>{issueSummary.issued_count}</strong> learners.{' '}
                 {issueSummary.skipped_count > 0 && (
                   <span>
@@ -311,7 +311,7 @@ export const ClassIssuePage: React.FC = () => {
       {/* Learners Table Card */}
       {selectedClassId ? (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-line pb-4">
             <div>
               <CardTitle className="text-lg">
                 Learners in {selectedClass?.name || 'Selected Class'}
@@ -341,7 +341,7 @@ export const ClassIssuePage: React.FC = () => {
             ) : learnersStatus.length === 0 ? (
               <div className="p-8">
                 <EmptyState
-                  icon={<Users className="h-8 w-8 text-slate-400" />}
+                  icon={<Users className="h-8 w-8 text-muted" />}
                   title="No learners enrolled"
                   description="This class currently has no active learner profiles registered in the system."
                 />
@@ -350,11 +350,11 @@ export const ClassIssuePage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                    <tr className="border-b border-line bg-surface-1">
                       <th className="p-3 w-12 text-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                          className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary"
                           checked={
                             selectedLearnerIds.size > 0 &&
                             selectedLearnerIds.size ===
@@ -368,19 +368,19 @@ export const ClassIssuePage: React.FC = () => {
                           }}
                         />
                       </th>
-                      <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                      <th className="p-3 font-semibold text-body">
                         Learner Name
                       </th>
-                      <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                      <th className="p-3 font-semibold text-body">
                         Admission #
                       </th>
-                      <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                      <th className="p-3 font-semibold text-slate-700 dark:text-slate-300">
+                      <th className="p-3 font-semibold text-body">Status</th>
+                      <th className="p-3 font-semibold text-body">
                         Title Holding
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tbody className="divide-y divide-line">
                     {learnersStatus.map(({ borrower, alreadyIssued, copyBarcode }) => {
                       const isSelected = selectedLearnerIds.has(borrower.id)
                       const isInactive = borrower.status === 'inactive'
@@ -388,11 +388,11 @@ export const ClassIssuePage: React.FC = () => {
                       return (
                         <tr
                           key={borrower.id}
-                          className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors ${
+                          className={`hover:bg-surface-2 transition-colors ${
                             alreadyIssued
                               ? 'bg-amber-50/30 dark:bg-amber-950/10'
                               : isInactive
-                              ? 'opacity-60 bg-slate-50 dark:bg-slate-900'
+                              ? 'opacity-60 bg-surface-1'
                               : isSelected
                               ? 'bg-primary-50/30 dark:bg-primary-950/10'
                               : ''
@@ -401,16 +401,16 @@ export const ClassIssuePage: React.FC = () => {
                           <td className="p-3 text-center">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary disabled:opacity-50"
+                              className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary disabled:opacity-50"
                               disabled={alreadyIssued || isInactive}
                               checked={isSelected}
                               onChange={() => handleToggleLearner(borrower.id)}
                             />
                           </td>
-                          <td className="p-3 font-medium text-slate-900 dark:text-slate-100">
+                          <td className="p-3 font-medium text-heading">
                             {borrower.name}
                           </td>
-                          <td className="p-3 font-mono text-xs text-slate-500">
+                          <td className="p-3 font-mono text-xs text-faint">
                             {borrower.borrower_no || '—'}
                           </td>
                           <td className="p-3">
@@ -424,7 +424,7 @@ export const ClassIssuePage: React.FC = () => {
                                 Already issued {copyBarcode ? `(#${copyBarcode})` : ''}
                               </Badge>
                             ) : (
-                              <span className="text-xs text-slate-400">Available to issue</span>
+                              <span className="text-xs text-muted">Available to issue</span>
                             )}
                           </td>
                         </tr>
@@ -436,8 +436,8 @@ export const ClassIssuePage: React.FC = () => {
             )}
           </CardContent>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 gap-4">
-            <div className="text-xs text-slate-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-line bg-surface-1/50 gap-4">
+            <div className="text-xs text-faint">
               {selectedLearnerIds.size} learner(s) will receive 1 copy each. All issues recorded
               atomically.
             </div>

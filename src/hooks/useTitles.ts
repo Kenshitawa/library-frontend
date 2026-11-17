@@ -9,13 +9,11 @@ export interface TitleFilters {
   gradeLevel?: string
   language?: string
   availability?: 'all' | 'available'
-  suggestionsOnly?: boolean
 }
 
 export function useTitles(filters?: TitleFilters) {
   return useQuery({
     queryKey: ['titles', filters],
-    enabled: !filters?.suggestionsOnly || (filters.search?.trim().length ?? 0) >= 2,
     queryFn: async (): Promise<Title[]> => {
       let query = (supabase as any)
         .from('titles')
@@ -156,6 +154,40 @@ export function useSubjects() {
 
       if (error) throw new Error(error.message)
       return (data || []) as Subject[]
+    },
+  })
+}
+
+export function useCreateSubject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string): Promise<Subject> => {
+      const trimmed = name.trim()
+      if (!trimmed) throw new Error('Enter a subject name.')
+
+      // Reuse an existing subject instead of creating duplicates.
+      const { data: existing, error: lookupError } = await (supabase as any)
+        .from('subjects')
+        .select('*')
+        .ilike('name', trimmed)
+        .is('deleted_at', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (lookupError) throw new Error(lookupError.message)
+      if (existing) return existing as Subject
+
+      const { data, error } = await (supabase as any)
+        .from('subjects')
+        .insert({ name: trimmed })
+        .select()
+        .single()
+
+      if (error) throw new Error(error.message)
+      return data as Subject
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] })
     },
   })
 }

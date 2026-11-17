@@ -190,10 +190,10 @@ export const ReturnDrivePage: React.FC = () => {
       {/* Screen Controls */}
       <div className="no-print flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+          <h2 className="text-xl font-bold text-heading sm:text-2xl">
             Return Drive Sheet
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-faint">
             Comprehensive list of all open loans grouped by class for school-wide book collection drives
           </p>
         </div>
@@ -211,7 +211,7 @@ export const ReturnDrivePage: React.FC = () => {
       {/* Search Filter */}
       <div className="no-print flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -220,7 +220,7 @@ export const ReturnDrivePage: React.FC = () => {
           />
         </div>
 
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-faint">
           <strong>{totalBorrowers}</strong> learners holding <strong>{totalBooks}</strong> items
         </div>
       </div>
@@ -241,7 +241,7 @@ export const ReturnDrivePage: React.FC = () => {
         </div>
       ) : filteredClasses.length === 0 ? (
         <Card>
-          <CardContent className="p-12 text-center text-slate-500">
+          <CardContent className="p-12 text-center text-faint">
             No open loans found matching your criteria.
           </CardContent>
         </Card>
@@ -249,7 +249,7 @@ export const ReturnDrivePage: React.FC = () => {
         <div className="space-y-6">
           {filteredClasses.map((cg) => (
             <Card key={cg.classId} className="print-block overflow-hidden">
-              <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 py-3 px-4">
+              <CardHeader className="bg-surface-1/50 border-b border-line py-3 px-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
@@ -267,31 +267,31 @@ export const ReturnDrivePage: React.FC = () => {
               <CardContent className="p-0">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/50 dark:border-slate-800">
-                      <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">
+                    <tr className="border-b border-line bg-surface-1">
+                      <th className="p-3 font-semibold text-muted">
                         Learner Name
                       </th>
-                      <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">
+                      <th className="p-3 font-semibold text-muted">
                         Adm #
                       </th>
-                      <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">
+                      <th className="p-3 font-semibold text-muted">
                         Items Outstanding
                       </th>
-                      <th className="p-3 font-semibold text-slate-600 dark:text-slate-400 text-center no-print">
+                      <th className="p-3 font-semibold text-muted text-center no-print">
                         Overdue
                       </th>
-                      <th className="p-3 font-semibold text-slate-600 dark:text-slate-400">
+                      <th className="p-3 font-semibold text-muted">
                         Check-off / Signature
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tbody className="divide-y divide-line">
                     {cg.borrowers.map((b) => (
-                      <tr key={b.borrowerId} className="align-top hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                        <td className="p-3 font-medium text-slate-900 dark:text-slate-100">
+                      <tr key={b.borrowerId} className="align-top hover:bg-surface-2/30">
+                        <td className="p-3 font-medium text-heading">
                           {b.borrowerName}
                         </td>
-                        <td className="p-3 font-mono text-slate-500">
+                        <td className="p-3 font-mono text-faint">
                           {b.admissionNumber || '—'}
                         </td>
                         <td className="p-3">
@@ -301,10 +301,10 @@ export const ReturnDrivePage: React.FC = () => {
                                 key={iss.issueId}
                                 className="flex items-center gap-2 text-[11px]"
                               >
-                                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                <span className="font-semibold text-body">
                                   {iss.title}
                                 </span>
-                                <span className="font-mono text-slate-400">[{iss.barcode}]</span>
+                                <span className="font-mono text-muted">[{iss.barcode}]</span>
                                 {iss.isOverdue && (
                                   <span className="text-danger font-medium">(Overdue)</span>
                                 )}
@@ -319,8 +319,8 @@ export const ReturnDrivePage: React.FC = () => {
                             <Badge variant="success">On track</Badge>
                           )}
                         </td>
-                        <td className="p-3 border-l border-slate-100 dark:border-slate-800 w-48">
-                          <div className="h-6 border-b border-dashed border-slate-300 dark:border-slate-700"></div>
+                        <td className="p-3 border-l border-line w-48">
+                          <div className="h-6 border-b border-dashed border-line-strong"></div>
                         </td>
                       </tr>
                     ))}

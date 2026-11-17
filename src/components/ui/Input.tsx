@@ -1,5 +1,5 @@
 import React, { forwardRef, useId } from 'react'
-import { cx } from '@/utils/cx'
+import { cn } from '@/lib/utils'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -32,11 +32,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const descId = `${inputId}-desc`
 
     return (
-      <div className={cx('w-full flex flex-col gap-1.5', wrapperClassName)}>
+      <div className={cn('w-full flex flex-col gap-1.5', wrapperClassName)}>
         {label && (
           <label
             htmlFor={inputId}
-            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+            className="text-xs font-medium text-body"
           >
             {label}
             {props.required && <span className="text-danger ml-1">*</span>}
@@ -45,7 +45,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative flex items-center w-full">
           {leftAddon && (
-            <div className="absolute left-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute left-3 flex items-center pointer-events-none text-muted">
               {leftAddon}
             </div>
           )}
@@ -58,12 +58,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={
               error ? errorId : description ? descId : undefined
             }
-            className={cx(
-              'w-full rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm text-[var(--text-primary)] transition-[border-color,box-shadow,background-color] duration-150',
-              'placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
-              'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400',
-              'placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-primary/20',
-              'disabled:cursor-not-allowed disabled:bg-[var(--surface-inset)] disabled:text-[var(--text-muted)]',
+            className={cn(
+              'w-full rounded-lg border border-line-strong bg-surface-1 px-3 py-2 text-sm text-body transition-colors',
+              'placeholder:text-faint focus:border-teal-400/50 focus:outline-none focus:ring-2 focus:ring-teal-400/10',
+              'disabled:cursor-not-allowed disabled:bg-surface-1 disabled:text-faint',
               leftAddon && 'pl-10',
               rightAddon && 'pr-10',
               error && 'border-danger focus:border-danger focus:ring-danger/20',
@@ -73,14 +71,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {rightAddon && (
-            <div className="absolute right-3 flex items-center text-slate-400">
+            <div className="absolute right-3 flex items-center text-muted">
               {rightAddon}
             </div>
           )}
         </div>
 
         {description && !error && (
-          <p id={descId} className="text-xs text-slate-500 dark:text-slate-400">
+          <p id={descId} className="text-[11px] text-faint">
             {description}
           </p>
         )}

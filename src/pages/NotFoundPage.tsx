@@ -10,13 +10,13 @@ export const NotFoundPage: React.FC = () => {
         <BookX className="h-10 w-10" />
       </div>
 
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
+      <h1 className="text-4xl font-extrabold tracking-tight text-heading sm:text-5xl">
         404
       </h1>
-      <h2 className="mt-2 text-xl font-semibold text-slate-800 dark:text-slate-200">
+      <h2 className="mt-2 text-xl font-semibold text-body">
         Page Not Found
       </h2>
-      <p className="mt-2 text-sm text-slate-500 max-w-sm">
+      <p className="mt-2 text-sm text-faint max-w-sm">
         The catalog card or shelf page you are looking for has been moved or doesn't exist.
       </p>
 

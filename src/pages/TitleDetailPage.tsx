@@ -38,7 +38,7 @@ import { formatCurrency } from '@/lib/utils'
 export const TitleDetailPage: React.FC = () => {
   const { titleId } = useParams<{ titleId: string }>()
   const navigate = useNavigate()
-  const { data: title, isLoading, error } = useTitle(titleId)
+  const { data: title, isLoading } = useTitle(titleId)
   const { data: locations } = useLocations()
   const addCopy = useAddCopy()
   const updateCopyStatus = useUpdateCopyStatus()
@@ -106,8 +106,8 @@ export const TitleDetailPage: React.FC = () => {
       header: 'Barcode',
       sortable: true,
       accessor: (row) => (
-        <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-900 dark:text-slate-100">
-          <Barcode className="h-3.5 w-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-heading">
+          <Barcode className="h-3.5 w-3.5 text-muted" />
           <span>{row.barcode}</span>
         </div>
       ),
@@ -116,7 +116,7 @@ export const TitleDetailPage: React.FC = () => {
       key: 'location',
       header: 'Location / Shelf',
       accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400">
+        <span className="text-xs text-muted">
           {row.location?.name || 'Main Library'}
         </span>
       ),
@@ -163,7 +163,7 @@ export const TitleDetailPage: React.FC = () => {
       key: 'price',
       header: 'Replacement Price',
       accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400">
+        <span className="text-xs text-muted">
           {formatCurrency(row.price || 0)}
         </span>
       ),
@@ -171,18 +171,7 @@ export const TitleDetailPage: React.FC = () => {
   ]
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-400">Loading title details...</div>
-  }
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-xl space-y-4 rounded-2xl border border-red-200 bg-white p-8 text-center dark:border-red-900 dark:bg-slate-900">
-        <AlertTriangle className="mx-auto h-8 w-8 text-red-600" />
-        <h3 className="text-lg font-bold">Book details could not be loaded</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{error.message}</p>
-        <Link to="/catalog"><Button variant="outline">Back to Catalog</Button></Link>
-      </div>
-    )
+    return <div className="p-8 text-center text-muted">Loading title details...</div>
   }
 
   if (!title) {
@@ -202,7 +191,7 @@ export const TitleDetailPage: React.FC = () => {
       <div>
         <Link
           to="/catalog"
-          className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          className="inline-flex items-center text-xs font-medium text-faint hover:text-faint dark:text-muted dark:hover:text-heading"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Catalog
@@ -214,7 +203,7 @@ export const TitleDetailPage: React.FC = () => {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Book Cover */}
-            <div className="flex h-48 w-36 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800 overflow-hidden shadow-md">
+            <div className="flex h-48 w-36 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-faint overflow-hidden shadow-md">
               {title.cover_url ? (
                 <img src={title.cover_url} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -226,15 +215,15 @@ export const TitleDetailPage: React.FC = () => {
             <div className="flex-1 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <h1 className="text-2xl font-bold text-heading">
                     {title.title}
                   </h1>
                   {title.subtitle && (
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    <p className="text-sm font-medium text-muted">
                       {title.subtitle}
                     </p>
                   )}
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-muted">
                     by <strong>{title.author || 'Unknown'}</strong>
                   </p>
                 </div>
@@ -248,33 +237,33 @@ export const TitleDetailPage: React.FC = () => {
               </div>
 
               {title.description && (
-                <p className="text-xs text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
+                <p className="text-xs text-muted max-w-3xl leading-relaxed">
                   {title.description}
                 </p>
               )}
 
               {/* Specs Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-line text-xs">
                 <div>
-                  <span className="text-slate-400">ISBN-13:</span>
-                  <div className="font-mono font-medium text-slate-800 dark:text-slate-200">
+                  <span className="text-muted">ISBN-13:</span>
+                  <div className="font-mono font-medium text-body">
                     {title.isbn13 || '—'}
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400">Subject:</span>
-                  <div className="font-medium text-slate-800 dark:text-slate-200">
+                  <span className="text-muted">Subject:</span>
+                  <div className="font-medium text-body">
                     {title.subject?.name || 'General'}
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400">Publisher:</span>
-                  <div className="font-medium text-slate-800 dark:text-slate-200">
+                  <span className="text-muted">Publisher:</span>
+                  <div className="font-medium text-body">
                     {title.publisher || '—'} ({title.year || '—'})
                   </div>
                 </div>
                 <div>
-                  <span className="text-slate-400">Copies:</span>
+                  <span className="text-muted">Copies:</span>
                   <div className="font-semibold text-primary">
                     {title.available_copies_count ?? 0} available of {title.total_copies_count ?? 0}
                   </div>
@@ -289,10 +278,10 @@ export const TitleDetailPage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="text-lg font-bold text-heading">
               Physical Copies & Barcodes
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-faint">
               Manage inventory, scan new copies, or withdraw damaged/lost items
             </p>
           </div>
@@ -349,12 +338,12 @@ export const TitleDetailPage: React.FC = () => {
             )}
 
             {/* Scan session toggle */}
-            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between bg-surface-1 p-3 rounded-lg border border-line">
               <div className="flex flex-col">
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                <span className="text-xs font-semibold text-body">
                   Continuous Scan Session Mode
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-muted">
                   Dialog stays open after scan so you can scan multiple books quickly
                 </span>
               </div>
@@ -367,7 +356,7 @@ export const TitleDetailPage: React.FC = () => {
             </div>
 
             {sessionCount > 0 && (
-              <div className="rounded-md bg-success-50 dark:bg-emerald-950/50 p-2.5 text-xs text-success-700 dark:text-emerald-300 font-medium">
+              <div className="rounded-md bg-success-50 dark:bg-emerald-950/50 p-2.5 text-xs text-success-700 dark:text-positive font-medium">
                 ✓ Added {sessionCount} {sessionCount === 1 ? 'copy' : 'copies'} this session! Ready for next barcode.
               </div>
             )}

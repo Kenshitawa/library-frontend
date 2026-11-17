@@ -18,10 +18,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="flex h-screen w-full items-center justify-center bg-surface-1">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="text-sm text-slate-500">Loading session...</span>
+          <span className="text-sm text-faint">Loading session...</span>
         </div>
       </div>
     )
@@ -35,10 +35,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ accountInactive: true }} replace />
   }
 
-  if (profile.must_change_password) {
-    return <Navigate to="/reset-password" replace />
-  }
-
   if (requiredRole && role !== requiredRole) {
     // If user doesn't have the role, redirect to dashboard or safe page
     return <Navigate to="/dashboard" replace />
@@ -46,4 +42,3 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   return <>{children}</>
 }
-

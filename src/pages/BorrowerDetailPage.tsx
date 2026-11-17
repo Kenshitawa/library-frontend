@@ -25,24 +25,13 @@ import { formatDate, formatCurrency, daysUntilDue } from '@/lib/utils'
 
 export const BorrowerDetailPage: React.FC = () => {
   const { borrowerId } = useParams<{ borrowerId: string }>()
-  const { data, isLoading, error } = useBorrower(borrowerId)
+  const { data, isLoading } = useBorrower(borrowerId)
   const updateBorrower = useUpdateBorrower()
   const [tab, setTab] = useState('current')
   const [deactivateError, setDeactivateError] = useState<string | null>(null)
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-400">Loading borrower details...</div>
-  }
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-xl space-y-4 rounded-2xl border border-red-200 bg-white p-8 text-center dark:border-red-900 dark:bg-slate-900">
-        <AlertTriangle className="mx-auto h-8 w-8 text-red-600" />
-        <h3 className="text-lg font-bold">Borrower details could not be loaded</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{error.message}</p>
-        <Link to="/borrowers"><Button variant="outline">Back to Borrowers</Button></Link>
-      </div>
-    )
+    return <div className="p-8 text-center text-muted">Loading borrower details...</div>
   }
 
   if (!data?.borrower) {
@@ -97,10 +86,10 @@ export const BorrowerDetailPage: React.FC = () => {
       header: 'Title & Author',
       accessor: (row) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="font-semibold text-heading">
             {row.copy?.title?.title || 'Unknown Title'}
           </span>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-faint">
             by {row.copy?.title?.author || 'Unknown'}
           </span>
         </div>
@@ -119,7 +108,7 @@ export const BorrowerDetailPage: React.FC = () => {
       key: 'issued_at',
       header: 'Issued Date',
       accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400">
+        <span className="text-xs text-muted">
           {formatDate(row.issued_at)}
         </span>
       ),
@@ -162,7 +151,7 @@ export const BorrowerDetailPage: React.FC = () => {
       key: 'created_at',
       header: 'Date',
       accessor: (row) => (
-        <span className="text-xs text-slate-500">{formatDate(row.created_at)}</span>
+        <span className="text-xs text-faint">{formatDate(row.created_at)}</span>
       ),
     },
     {
@@ -185,7 +174,7 @@ export const BorrowerDetailPage: React.FC = () => {
       key: 'paid_amount',
       header: 'Paid Amount',
       accessor: (row) => (
-        <span className="text-xs text-slate-600 dark:text-slate-400">
+        <span className="text-xs text-muted">
           {formatCurrency(row.paid_amount || 0)}
         </span>
       ),
@@ -215,7 +204,7 @@ export const BorrowerDetailPage: React.FC = () => {
       <div>
         <Link
           to="/borrowers"
-          className="inline-flex items-center text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          className="inline-flex items-center text-xs font-medium text-faint hover:text-faint dark:text-muted dark:hover:text-heading"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Borrowers
@@ -239,14 +228,14 @@ export const BorrowerDetailPage: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
+                  <h1 className="text-xl font-bold text-heading sm:text-2xl">
                     {borrower.name}
                   </h1>
                   <Badge variant={borrower.status === 'active' ? 'success' : 'danger'}>
                     {borrower.status}
                   </Badge>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
                   <span>ID: <strong className="font-mono">{borrower.borrower_no}</strong></span>
                   <span>•</span>
                   <span>Type: <strong>{borrower.borrower_type?.name || 'Learner'}</strong></span>
@@ -261,7 +250,7 @@ export const BorrowerDetailPage: React.FC = () => {
             </div>
 
             <Button
-              variant={borrower.status === 'active' ? 'outline' : 'success'}
+              variant={borrower.status === 'active' ? 'danger' : 'success'}
               size="sm"
               leftIcon={borrower.status === 'active' ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
               onClick={handleToggleActive}
@@ -271,44 +260,44 @@ export const BorrowerDetailPage: React.FC = () => {
           </div>
 
           {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-slate-100 text-xs dark:border-slate-800 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-line text-xs sm:grid-cols-3 lg:grid-cols-5">
             <div>
-              <span className="text-slate-400">Open Loans:</span>
+              <span className="text-muted">Open Loans:</span>
               <div className="text-base font-bold text-primary mt-0.5">
                 {openIssuesCount} book(s)
               </div>
             </div>
             <div>
-              <span className="text-slate-400">Outstanding Charges:</span>
-              <div className={`text-base font-bold mt-0.5 ${outstandingBalance > 0 ? 'text-danger' : 'text-slate-800 dark:text-slate-200'}`}>
+              <span className="text-muted">Outstanding Charges:</span>
+              <div className={`text-base font-bold mt-0.5 ${outstandingBalance > 0 ? 'text-danger' : 'text-body'}`}>
                 {formatCurrency(outstandingBalance)}
               </div>
             </div>
             <div>
-              <span className="text-slate-400">Date of Birth:</span>
-              <div className="font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              <span className="text-muted">Date of Birth:</span>
+              <div className="font-medium text-body mt-0.5">
                 {formatDate(borrower.date_of_birth)}
               </div>
             </div>
             <div>
-              <span className="text-slate-400">Parent / Guardian:</span>
-              <div className="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+              <span className="text-muted">Parent / Guardian:</span>
+              <div className="mt-0.5 font-medium text-body">
                 {borrower.guardian_name || '—'}
               </div>
               {borrower.guardian_phone && (
-                <div className="mt-0.5 text-slate-500">{borrower.guardian_phone}</div>
+                <div className="mt-0.5 text-faint">{borrower.guardian_phone}</div>
               )}
               {borrower.guardian_email && (
-                <div className="mt-0.5 break-all text-slate-500">{borrower.guardian_email}</div>
+                <div className="mt-0.5 break-all text-faint">{borrower.guardian_email}</div>
               )}
             </div>
             <div>
-              <span className="text-slate-400">Direct Contact:</span>
-              <div className="font-medium text-slate-800 dark:text-slate-200 mt-0.5 truncate">
+              <span className="text-muted">Direct Contact:</span>
+              <div className="font-medium text-body mt-0.5 truncate">
                 {borrower.phone || borrower.email || '—'}
               </div>
               {borrower.email && borrower.phone && (
-                <div className="mt-0.5 break-all text-slate-500">{borrower.email}</div>
+                <div className="mt-0.5 break-all text-faint">{borrower.email}</div>
               )}
             </div>
           </div>

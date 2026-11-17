@@ -56,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, [notifications, unreadNotifications])
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-[#b8d3c4] bg-[#d7e9dc]/95 px-4 backdrop-blur-sm dark:border-[#31584d] dark:bg-[#17382f]/95 sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 w-full items-center justify-between border-b border-line bg-abyss/80 backdrop-blur-xl px-4 sm:px-6">
       {/* Left: Mobile hamburger & Page Breadcrumb */}
       <div className="flex items-center gap-3">
         {onToggleMobileNav && (
@@ -72,20 +72,18 @@ export const TopBar: React.FC<TopBarProps> = ({
         )}
 
         <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-            <Link to="/dashboard" className="text-slate-500 hover:text-primary dark:text-[#b4c3b6] dark:hover:text-[#9de2bb] transition-colors">
-              Library
-            </Link>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-faint">
+            <span className="text-faint">Library</span>
             {pathParts.length > 0 && (
               <>
-                <span>/</span>
-                <span className="capitalize text-slate-600 dark:text-[#d4e0d5]">
+                <span className="text-faint">/</span>
+                <span className="capitalize text-body font-medium">
                   {pathParts[0]}
                 </span>
               </>
             )}
           </div>
-          <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
+          <h1 className="text-base font-semibold text-heading sm:text-lg">
             {currentTitle}
           </h1>
         </div>
@@ -97,11 +95,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="hidden sm:flex items-center gap-2 rounded-button border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500 hover:border-slate-300 dark:border-[#40584a] dark:bg-[#22342b] dark:text-[#b4c3b6] transition-colors"
+          className="hidden sm:flex items-center gap-2 rounded-lg border border-line-strong bg-surface-1 px-3 py-1.5 text-xs text-muted hover:border-teal-400/30 hover:text-accent transition-colors"
         >
           <Search className="h-3.5 w-3.5" />
           <span>Quick search...</span>
-          <kbd className="rounded bg-white dark:bg-[#14221b] px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:text-[#b4c3b6] shadow-sm border border-slate-200 dark:border-[#40584a]">
+          <kbd className="rounded border border-line-strong bg-surface-1 px-1.5 py-0.5 text-[10px] font-semibold text-faint">
             ⌘K
           </kbd>
         </button>
@@ -110,7 +108,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 w-9 p-0 text-slate-500 hover:text-slate-900 dark:text-[#b4c3b6] dark:hover:text-[#f0f5ef]"
+          className="h-9 w-9 p-0 text-muted hover:text-heading"
           onClick={toggleTheme}
           aria-label="Toggle theme"
         >
@@ -119,10 +117,10 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Notification Bell */}
         <Link to="/notifications" aria-label={`View notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}>
-          <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-button text-slate-500 transition-colors hover:bg-[#c6dfd0] dark:text-[#b4c3b6] dark:hover:bg-[#294b3e]">
+          <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-heading">
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white leading-none">
+              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-heading leading-none">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -135,9 +133,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           trigger={
             <button
               type="button"
-              className="flex items-center gap-2 rounded-full border border-slate-200 p-1 hover:border-slate-300 dark:border-[#40584a] transition-colors"
+              className="flex items-center gap-2 rounded-full border border-line-strong p-1 hover:border-line-strong transition-colors"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300 text-xs font-bold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-400/15 text-accent text-xs font-bold">
                 {profile?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
               </div>
             </button>
