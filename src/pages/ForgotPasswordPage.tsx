@@ -21,7 +21,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}reset-password`,
       })
 
       if (resetError) {

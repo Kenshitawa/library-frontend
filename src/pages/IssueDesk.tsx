@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { startTransition, useState, useRef, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -107,6 +107,54 @@ function recentIssueBadge(status: string, dueAt: string) {
   return { label: 'On loan', variant: 'info' as const }
 }
 
+interface IssueScanInputProps {
+  inputRef: React.RefObject<HTMLInputElement>
+  resetKey: number
+  onQueryChange: (value: string) => void
+  onFocus: () => void
+  onBlur: () => void
+  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void
+  expanded: boolean
+}
+
+// Keep the scanner's controlled keystrokes local so typing stays responsive
+// while the larger desk view and its suggestions update at transition priority.
+const IssueScanInput = React.memo(function IssueScanInput({
+  inputRef,
+  resetKey,
+  onQueryChange,
+  onFocus,
+  onBlur,
+  onKeyDown,
+  expanded,
+}: IssueScanInputProps) {
+  const [value, setValue] = useState('')
+
+  useEffect(() => setValue(''), [resetKey])
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={value}
+      onChange={(event) => {
+        const nextValue = event.target.value
+        setValue(nextValue)
+        onQueryChange(nextValue)
+      }}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      placeholder="Scan barcode or type learner / book / author..."
+      className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-surface-1 px-4 py-3 pl-12 text-heading placeholder:text-muted focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
+      autoComplete="off"
+      role="combobox"
+      aria-expanded={expanded}
+      aria-autocomplete="list"
+    />
+  )
+})
+
 export const IssueDesk: React.FC = () => {
   const { user, profile } = useAuth()
   const { profile: libraryProfile } = useLibraryProfile()
@@ -117,6 +165,8 @@ export const IssueDesk: React.FC = () => {
   const sessionResetTimerRef = useRef<number | null>(null)
 
   const [scanQuery, setScanQuery] = useState('')
+  const scanQueryRef = useRef('')
+  const [scanResetKey, setScanResetKey] = useState(0)
   const [suggestions, setSuggestions] = useState<DeskSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeSuggestion, setActiveSuggestion] = useState(-1)
@@ -133,6 +183,17 @@ export const IssueDesk: React.FC = () => {
   const [deskMessage, setDeskMessage] = useState<{ type: 'error'; text: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [defaultLoanDays, setDefaultLoanDays] = useState(14)
+
+  const updateScanQuery = (value: string) => {
+    scanQueryRef.current = value
+    startTransition(() => setScanQuery(value))
+  }
+
+  const clearScanQuery = () => {
+    scanQueryRef.current = ''
+    setScanQuery('')
+    setScanResetKey((key) => key + 1)
+  }
 
   const { data: recentIssues = [] } = useQuery({
     queryKey: ['recent-issues'],
@@ -305,7 +366,7 @@ export const IssueDesk: React.FC = () => {
       setSelectedBorrower(null)
       setSessionBooks([])
       setDeskMessage(null)
-      setScanQuery('')
+      clearScanQuery()
       scanInputRef.current?.focus()
     }, delay)
   }
@@ -318,7 +379,7 @@ export const IssueDesk: React.FC = () => {
   const selectBorrowerFromRecord = async (borrower: any) => {
     cancelSessionReset()
     setDeskMessage(null)
-    setScanQuery('')
+    clearScanQuery()
     closeSuggestions()
 
     try {
@@ -379,7 +440,7 @@ export const IssueDesk: React.FC = () => {
         type: 'error',
         text: `Book "${copyData.title?.title || copyData.barcode}" is already in this session.`,
       })
-      setScanQuery('')
+      clearScanQuery()
       closeSuggestions()
       return
     }
@@ -457,7 +518,7 @@ export const IssueDesk: React.FC = () => {
 
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const query = scanQuery.trim()
+    const query = scanQueryRef.current.trim()
     if (!query) return
     cancelSessionReset()
     setDeskMessage(null)
@@ -511,7 +572,7 @@ export const IssueDesk: React.FC = () => {
         type: 'error',
         text: `No learner, barcode or title matched "${query}".`,
       })
-      setScanQuery('')
+      clearScanQuery()
     } catch (err: any) {
       playSound('error')
       setDeskMessage({ type: 'error', text: err?.message || 'Error processing scan.' })
@@ -623,7 +684,7 @@ export const IssueDesk: React.FC = () => {
     setSelectedBorrower(null)
     setSessionBooks([])
     setDeskMessage(null)
-    setScanQuery('')
+    clearScanQuery()
     closeSuggestions()
     scanInputRef.current?.focus()
   }
@@ -696,26 +757,22 @@ export const IssueDesk: React.FC = () => {
         <CardContent className="p-4 sm:p-5">
           <form onSubmit={handleScanSubmit} className="flex gap-2">
             <div className="relative flex-1">
-              <input
-                ref={scanInputRef}
-                type="text"
-                value={scanQuery}
-                onChange={(e) => {
-                  setScanQuery(e.target.value)
-                  setShowSuggestions(true)
-                  setActiveSuggestion(-1)
+              <IssueScanInput
+                inputRef={scanInputRef}
+                resetKey={scanResetKey}
+                onQueryChange={(value) => {
+                  updateScanQuery(value)
+                  startTransition(() => {
+                    setShowSuggestions(true)
+                    setActiveSuggestion(-1)
+                  })
                 }}
                 onFocus={() => {
-                  if (scanQuery.trim().length >= 2) setShowSuggestions(true)
+                  if (scanQueryRef.current.trim().length >= 2) setShowSuggestions(true)
                 }}
                 onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
                 onKeyDown={handleScanKeyDown}
-                placeholder="Scan barcode or type learner / book / author..."
-                className="w-full text-base sm:text-lg font-mono rounded-lg border-2 border-primary/30 bg-surface-1 px-4 py-3 pl-12 text-heading placeholder:text-muted focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/20"
-                autoComplete="off"
-                role="combobox"
-                aria-expanded={suggestionOpen}
-                aria-autocomplete="list"
+                expanded={suggestionOpen}
               />
               <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary pointer-events-none" />
               <Search className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted pointer-events-none" />

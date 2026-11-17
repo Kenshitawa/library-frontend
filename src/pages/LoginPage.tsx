@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { AlertCircle, BookOpen, Library } from 'lucide-react'
+import { AlertCircle, BookOpen, Eye, EyeOff, Library } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -36,6 +36,7 @@ export const LoginPage: React.FC = () => {
   const [activeSlide, setActiveSlide] = useState(0)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
@@ -132,12 +133,23 @@ export const LoginPage: React.FC = () => {
                   <div>
                     <Input
                       label="Password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       autoComplete="current-password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      rightAddon={
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((visible) => !visible)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          aria-pressed={showPassword}
+                          className="rounded p-1 text-muted transition-colors hover:text-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      }
                     />
                     <div className="mt-1.5 text-right">
                       <Link

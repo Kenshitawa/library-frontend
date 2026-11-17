@@ -182,4 +182,4 @@ export const router = createBrowserRouter([
     element: withSuspense(<NotFoundPage />),
     errorElement: <RouteErrorPage />,
   },
-])
+], { basename: import.meta.env.BASE_URL })
