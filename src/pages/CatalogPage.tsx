@@ -10,6 +10,7 @@ import {
   Eye,
   Library,
   Sparkles,
+  Trash2,
   X,
 } from 'lucide-react'
 import { DataTable, type Column } from '@/components/ui/DataTable'
@@ -33,6 +34,7 @@ import {
   useLocations,
   useCreateTitle,
   useAddCopy,
+  useDeleteTitle,
   type TitleFilters,
 } from '@/hooks/useTitles'
 import type { Title, BookType } from '@/types'
@@ -76,6 +78,7 @@ export const CatalogPage: React.FC = () => {
   const createTitle = useCreateTitle()
   const addCopy = useAddCopy()
   const createSubject = useCreateSubject()
+  const deleteTitle = useDeleteTitle()
 
   /** Quick-add from either subject combobox: creates (or reuses) and returns the id. */
   const handleQuickAddSubject = async (name: string) => {
@@ -215,6 +218,19 @@ export const CatalogPage: React.FC = () => {
           ? `Title saved, but the first copy was not added: ${message} Correct the barcode and try again.`
           : message
       )
+    }
+  }
+
+  const handleDeleteTitle = async (title: Title) => {
+    if (!window.confirm(`Delete "${title.title}" from the catalog? Copy and loan history will be preserved.`)) {
+      return
+    }
+
+    try {
+      await deleteTitle.mutateAsync(title.id)
+      toast.success(`"${title.title}" was removed from the catalog.`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not delete the book.')
     }
   }
 
@@ -501,6 +517,12 @@ export const CatalogPage: React.FC = () => {
             label: 'View details & copies',
             icon: <Eye className="h-4 w-4" />,
             onClick: () => navigate(`/catalog/${row.id}`),
+          },
+          {
+            label: 'Delete book',
+            icon: <Trash2 className="h-4 w-4" />,
+            danger: true,
+            onClick: () => { void handleDeleteTitle(row) },
           },
         ]}
       />

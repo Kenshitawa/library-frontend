@@ -311,6 +311,26 @@ export function useUpdateTitle() {
   })
 }
 
+export function useDeleteTitle() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from('titles')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+        .is('deleted_at', null)
+
+      if (error) throw new Error(error.message)
+      return id
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['titles'] })
+      queryClient.invalidateQueries({ queryKey: ['title', id] })
+    },
+  })
+}
+
 export function useAddCopy() {
   const queryClient = useQueryClient()
   return useMutation({

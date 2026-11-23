@@ -185,6 +185,18 @@ export const TitleDetailPage: React.FC = () => {
     )
   }
 
+  const copyPrices = (title.copies || []).flatMap((copy) =>
+    copy.deleted_at === null && typeof copy.price === 'number' && Number.isFinite(copy.price)
+      ? [copy.price]
+      : []
+  )
+  const uniqueCopyPrices = Array.from(new Set(copyPrices)).sort((a, b) => a - b)
+  const replacementPrice = uniqueCopyPrices.length === 0
+    ? 'Not set'
+    : uniqueCopyPrices.length === 1
+      ? formatCurrency(uniqueCopyPrices[0])
+      : `Varies (${formatCurrency(uniqueCopyPrices[0])} – ${formatCurrency(uniqueCopyPrices[uniqueCopyPrices.length - 1])})`
+
   return (
     <div className="space-y-6">
       {/* Back to Catalog */}
@@ -243,11 +255,17 @@ export const TitleDetailPage: React.FC = () => {
               )}
 
               {/* Specs Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-line text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-3 border-t border-line text-xs">
                 <div>
                   <span className="text-muted">ISBN-13:</span>
                   <div className="font-mono font-medium text-body">
                     {title.isbn13 || '—'}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-muted">Replacement price:</span>
+                  <div className="font-semibold text-body">
+                    {replacementPrice}
                   </div>
                 </div>
                 <div>
