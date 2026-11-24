@@ -225,8 +225,8 @@ export const TitleDetailPage: React.FC = () => {
 
             {/* Metadata */}
             <div className="flex-1 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <h1 className="text-2xl font-bold text-heading">
                     {title.title}
                   </h1>
@@ -240,7 +240,8 @@ export const TitleDetailPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="success">{replacementPrice}</Badge>
                   <Badge variant="info">{title.type}</Badge>
                   {title.grade_level && (
                     <Badge variant="gray">{title.grade_level}</Badge>
@@ -260,12 +261,6 @@ export const TitleDetailPage: React.FC = () => {
                   <span className="text-muted">ISBN-13:</span>
                   <div className="font-mono font-medium text-body">
                     {title.isbn13 || '—'}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-muted">Replacement price:</span>
-                  <div className="font-semibold text-body">
-                    {replacementPrice}
                   </div>
                 </div>
                 <div>
