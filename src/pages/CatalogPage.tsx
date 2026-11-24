@@ -95,6 +95,7 @@ export const CatalogPage: React.FC = () => {
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [aiMessage, setAiMessage] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
 
   const handleOpenAddDialog = () => {
     setNewTitle(createInitialTitle())
@@ -104,6 +105,7 @@ export const CatalogPage: React.FC = () => {
     setTypeManuallySelected(false)
     setAiMessage(null)
     setFormError(null)
+    setCoverImage(null)
     setAddDialogOpen(true)
   }
 
@@ -199,6 +201,19 @@ export const CatalogPage: React.FC = () => {
         titleId = created.id
         titleCreatedDuringSubmit = true
         setCreatedTitleId(created.id)
+      }
+
+      if (coverImage && titleId) {
+        const extension = coverImage.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `${titleId}/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await supabase.storage
+          .from('book-covers')
+          .upload(path, coverImage, { upsert: true, contentType: coverImage.type })
+        if (uploadError) throw new Error(`Cover image upload failed: ${uploadError.message}`)
+        const { data: cover } = supabase.storage.from('book-covers').getPublicUrl(path)
+        const { error: updateError } = await (supabase as any)
+          .from('titles').update({ cover_url: cover.publicUrl }).eq('id', titleId)
+        if (updateError) throw new Error(`Cover uploaded but could not be linked: ${updateError.message}`)
       }
 
       if (firstCopyBarcode.trim()) {
@@ -669,6 +684,17 @@ export const CatalogPage: React.FC = () => {
                 value={newTitle.year}
                 onChange={(e) => setNewTitle({ ...newTitle, year: Number(e.target.value) })}
               />
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-body" htmlFor="book-cover-image">Book cover image</label>
+                <input
+                  id="book-cover-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setCoverImage(event.target.files?.[0] ?? null)}
+                  className="block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-body"
+                />
+                {coverImage && <p className="mt-1 text-xs text-muted">Selected: {coverImage.name}</p>}
+              </div>
                 </div>
               </>
             )}
