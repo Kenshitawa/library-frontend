@@ -28,14 +28,14 @@ import { useDashboardStats, useDueSoon, useOverdue } from '@/hooks/useIssues'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { formatDate, daysUntilDue } from '@/lib/utils'
 
-// 30-day activity simulation for the chart
-const mockChartData = Array.from({ length: 30 }).map((_, i) => {
+// Show a clean zero baseline instead of simulated circulation activity.
+const emptyChartData = Array.from({ length: 30 }).map((_, i) => {
   const d = new Date()
   d.setDate(d.getDate() - (29 - i))
   return {
     date: d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', timeZone: 'Africa/Nairobi' }),
-    issues: Math.floor(Math.sin(i / 3) * 8 + 12 + (i % 5)),
-    returns: Math.floor(Math.cos(i / 3) * 6 + 10 + (i % 4)),
+    issues: 0,
+    returns: 0,
   }
 })
 
@@ -141,7 +141,7 @@ export const DashboardPage: React.FC = () => {
         <CardContent className="pt-4">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={emptyChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-slate-100 dark:stroke-slate-800" />
                 <XAxis
                   dataKey="date"
